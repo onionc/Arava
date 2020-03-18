@@ -17,7 +17,7 @@
 
 **3月**
 
-2020-3-17 takecare. 取色器之屏幕取色
+2020-3-17 [TakeColor](https://github.com/onionc/Arava/tree/master/TakeColor)_v1.0. [取色器](https://github.com/onionc/Arava/blob/master/TakeColor/%E5%8F%96%E8%89%B2%E5%99%A8.md)之屏幕取色
 
 
 
@@ -29,12 +29,12 @@
 
 > 部分项目可能需要拆分多天，暂时先列出想法，多是一些小工具
 
-取色器
-色盘（列出互补色，荔枝一个调色课程中听到的，需要补一点互补色知识）
-（代码条数统计）
-qrcode 纠错算法
-qrcode 生成
-贪吃蛇（队列）
-推箱子复刻版
-录制gif
+- 取色器
+- 色盘（列出互补色，荔枝一个调色课程中听到的，需要补一点互补色知识）
+- （代码条数统计）
+- qrcode 纠错算法
+- qrcode 生成
+- 贪吃蛇（队列）
+- 推箱子复刻版
+- 录制gif
 
