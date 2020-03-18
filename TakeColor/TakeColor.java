@@ -5,13 +5,28 @@ import java.awt.Color;
 import java.awt.Toolkit;
 import java.awt.MouseInfo;
 import java.awt.AWTException;
+import java.awt.BorderLayout;
 import java.awt.Robot;
+
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.util.Timer;
 import java.util.TimerTask;
 
-class ColorFrame extends JFrame{
+
+/**
+ * frame
+ */
+class TakeColorFrame extends JFrame{
+    public TakeColorFrame(){
+        add(new TakeColorPanel());
+        pack();
+    }
+}
+
+class TakeColorPanel extends JPanel{
 
     private static final long serialVersionUID = 1L;
     private static final int WIDTH = 350;
@@ -19,20 +34,20 @@ class ColorFrame extends JFrame{
     private JPanel mainPanel;
     private Robot robot;
 
-    public ColorFrame(){
-        // 窗体设置
-        //setSize(WIDTH, HEIGHT);
+    public TakeColorPanel(){
+
         // 窗体居中
         Dimension centre = this.getScreenCentre();
         setLocation(centre.width - WIDTH/2, centre.height - HEIGHT/2);
 
-        setTitle("TakeColor");
-        setUndecorated(true); // 关闭所有框架装饰
+        // 布局方式
+        setLayout(new BorderLayout());
 
-        // 添加 panel
+        // 添加 panel 组件
         mainPanel = new JPanel();
         add(mainPanel);
-        pack();
+
+
 
         // 鼠标监听
         mouseListener();
@@ -88,7 +103,8 @@ class ColorFrame extends JFrame{
 public class TakeColor{
     public static void main(String [] args){
         EventQueue.invokeLater(() -> {
-            ColorFrame f = new ColorFrame();
+            TakeColorFrame f = new TakeColorFrame();
+            f.setTitle("TakeColor");
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 设置关闭事件
             f.setVisible(true); // 显示窗体
         });
