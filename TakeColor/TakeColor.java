@@ -48,7 +48,9 @@ class TakeColorPanel extends JPanel{
     private Image areaImage; // 待放大的图片
 
     private Robot robot;
-    private static final int areaSize = 25; // 待放大的区域边长
+    private int zoomValue = 3; // 放大倍数，（只会放大到100像素）
+    private static final int ZoomMax = 100; // 总的放大倍数，不能更改
+    private int sideLength = ZoomMax/zoomValue;
 
     // 上一次的光标位置
     private Point prevPoint = null;
@@ -65,7 +67,8 @@ class TakeColorPanel extends JPanel{
         // 无布局方式
         setLayout(null);
 
-        // 左侧的颜色框和显示的坐标，值
+
+        // 左侧的颜色框和显示的坐标，颜色值
         // 添加 panel 组件用来做颜色框
         colorPanel = new JPanel();
         colorPanel.setBounds(10, 10, 100, 60);
@@ -182,7 +185,8 @@ class TakeColorPanel extends JPanel{
 
         int x = mousePoint.x;
         int y = mousePoint.y;
-        Rectangle r = new Rectangle (x-25, y-25, 25, 25);
+        
+        Rectangle r = new Rectangle (x-sideLength/2, y-sideLength/2, sideLength, sideLength);
         areaImage = robot.createScreenCapture(r);
      
         repaint(); // 重绘，调用 paintComponent
@@ -199,14 +203,29 @@ class TakeColorPanel extends JPanel{
      * 绘制界面
      */
     public void paintComponent(Graphics g){
+        // 父类的paitComponent需要绘制其他默认的组件，比如左侧颜色框panel以及坐标和颜色值label。如果不执行，则绘制的区域会重叠
+        super.paintComponent(g);
+        
         // 中间放大镜
         Graphics2D g2 = (Graphics2D) g;
-        g2.drawImage(areaImage,120,10,null);
+        //g2.drawImage(areaImage,10,300,null); // 原大小
+        g2.drawImage(areaImage,120,10,100,100,null);
         // 放大镜的十字线
         g2.setPaint(Color.RED);
         g2.draw(crossHorizontal);
         g2.draw(crossVertical);
 
+
+
+        // 绘制各组件的边框
+        g2.setPaint(Color.BLACK);
+        Rectangle2D colorRect = new Rectangle2D.Double();
+        Rectangle2D zoomRect = new Rectangle2D.Double();
+        //Rectangle2D colorRect = new Rectangle2D.Double();
+        colorRect.setFrameFromDiagonal(10-1, 10-1, 110, 70);
+        zoomRect.setFrameFromDiagonal(120-1, 10-1, 120+100, 110);
+        g2.draw(colorRect);
+        g2.draw(zoomRect);
     }
 
 }

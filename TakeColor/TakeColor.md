@@ -126,7 +126,7 @@ public class TakeColor{
 
 ### TakeColor v1.1
 
-这一版显示坐标和颜色值，放大鼠标周围区域，按键记录颜色历史。
+这一版显示坐标和颜色值，放大鼠标周围区域。
 
 #### 1. 显示颜色、位置以及颜色值
 
@@ -158,7 +158,7 @@ g.drawImage(image, 0, 0, width, height, null);
 
 ##### 2.1 屏幕动态截图效果
 
-为了直接将image对象显示到界面上，我们可以覆盖 `JComponent` 类的 `paintCompoent()`，得到 Graphics 变量用来绘制。因为 `JPanel` 继承了 `JComponent`, 所以同样可以用`paintCompoent()`
+为了直接将image对象显示到界面上，我们可以覆盖 JComponent 类的 `paintCompoent()`，得到 Graphics 变量用来绘制。因为 JPanel 继承了 JComponent, 所以同样可以用 paintCompoent()
 
 ```java
 class TakeColorPanel extends JPanel{
@@ -190,7 +190,9 @@ class TakeColorPanel extends JPanel{
 
   ![room.png](http://image.acfuu.com/mdImages/202003/room.png)
 
- ![room.png](http://image.acfuu.com/mdImages/202003/room.gif)
+ 动图：
+
+  ![room.png](http://image.acfuu.com/mdImages/202003/room.gif)
 
 *真的像特拉法尔加·罗的能力*
 
@@ -200,19 +202,32 @@ class TakeColorPanel extends JPanel{
 
 ##### 2.2 放大
 
+发现 drawImage() 就可以放大图片。
+
+ ![drawImage.png](http://image.acfuu.com/mdImages/202003/drawImage.png)
 
 
 
 
 
+对于50\*50像素的图片，对于下面的代码， 第二行会显示放大1倍的效果（变成了100\*100）
+
+```
+g2.drawImage(areaImage,120,10,null);
+g2.drawImage(areaImage,180,10,100,100,null);
+```
+
+ ![drawImageCompare.png](http://image.acfuu.com/mdImages/202003/drawImageCompare.png)
+
+放大效果完成。
+
+之后添加边框，和原版的效果如下：
+
+ ![zoom.png](http://image.acfuu.com/mdImages/202003/zoom.png)
 
 
 
-
-
-
-
-
+疑惑：在vscode中修改 paintComponent ，代码修改保存之后会即时的改变。这不是变成了脚本语言了么？
 
 
 
