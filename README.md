@@ -17,9 +17,9 @@
 
 **3月**
 
-2020-3-17 [TakeColor](https://github.com/onionc/Arava/tree/master/TakeColor)_v1.0. [取色器](https://github.com/onionc/Arava/blob/master/TakeColor/%E5%8F%96%E8%89%B2%E5%99%A8.md)之屏幕取色
+- 2020-3-17 [TakeColor](https://github.com/onionc/Arava/tree/master/TakeColor)_v1.0. [取色器](https://github.com/onionc/Arava/blob/master/TakeColor/TakeColor.md)之屏幕取色
 
-
+- 2020-3-18 TakeColor v1.1. 增加颜色显示和放大镜功能
 
 
 

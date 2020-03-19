@@ -5,22 +5,28 @@ import java.awt.Color;
 import java.awt.Toolkit;
 import java.awt.MouseInfo;
 import java.awt.AWTException;
-import java.awt.BorderLayout;
 import java.awt.Robot;
-
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import java.awt.Image;
+import java.awt.Rectangle;
+import java.awt.Graphics2D;
+import java.awt.Graphics;
+
+import java.awt.geom.*;
+
 
 /**
  * frame
  */
 class TakeColorFrame extends JFrame{
-    public TakeColorFrame(){
+    private static final long serialVersionUID = 1L;
+
+    public TakeColorFrame() {
         add(new TakeColorPanel());
         pack();
     }
@@ -31,26 +37,74 @@ class TakeColorPanel extends JPanel{
     private static final long serialVersionUID = 1L;
     private static final int WIDTH = 350;
     private static final int HEIGHT = 200;
-    private JPanel mainPanel;
+    private JPanel colorPanel; // 颜色展示面板
+    private JLabel coordsJlabel; // 坐标信息
+    private JLabel colorJlabel; // 颜色信息
+    
+    enum ColorMode {RGB, HTML, HEX, HSL, HSB}; // 颜色模式
+    ColorMode currentColorMode = ColorMode.RGB;
+
+    private Point mousePoint; // 光标点
+    private Image areaImage; // 待放大的图片
+
     private Robot robot;
+    private static final int areaSize = 25; // 待放大的区域边长
 
+    // 上一次的光标位置
+    private Point prevPoint = null;
+
+    // 交叉线
+    Line2D crossHorizontal;
+    Line2D crossVertical;
+    
     public TakeColorPanel(){
-
         // 窗体居中
         Dimension centre = this.getScreenCentre();
         setLocation(centre.width - WIDTH/2, centre.height - HEIGHT/2);
 
-        // 布局方式
-        setLayout(new BorderLayout());
+        // 无布局方式
+        setLayout(null);
 
-        // 添加 panel 组件
-        mainPanel = new JPanel();
-        add(mainPanel);
+        // 左侧的颜色框和显示的坐标，值
+        // 添加 panel 组件用来做颜色框
+        colorPanel = new JPanel();
+        colorPanel.setBounds(10, 10, 100, 60);
+        add(colorPanel);
+        // 坐标
+        coordsJlabel = new JLabel();
+        coordsJlabel.setBounds(10, 70, 100, 20);
+        add(coordsJlabel);
+        // 颜色值
+        colorJlabel = new JLabel();
+        colorJlabel.setBounds(10, 90, 100, 20);
+        add(colorJlabel);
 
-
+        // 中间的放大镜效果直接用图片绘制，这里需要十字线（位置10,120 大小100,100）
+        crossHorizontal = new Line2D.Double(120+50, 10, 120+50, 110);
+        crossVertical = new Line2D.Double(120, 10+50, 120+100, 10+50);
+     
+        // 右侧
+        
 
         // 鼠标监听
         mouseListener();
+    }
+
+        /**
+     * 获取屏幕中心点
+     * @return Dimension
+     */
+    public Dimension getScreenCentre(){
+        // 获取屏幕分辨率
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        return new Dimension(screenSize.width/2, screenSize.height/2);
+    }
+
+    /**
+     * 重置窗口大小
+     */
+    public Dimension getPreferredSize(){
+        return new Dimension(WIDTH, HEIGHT);
     }
 
     /**
@@ -73,31 +127,88 @@ class TakeColorPanel extends JPanel{
     }
 
     /**
-     * 获取位置和颜色，并设置panel颜色
+     * 获取位置和颜色，并显示位置和颜色信息
      */
     private void setPanelColor(){
-        Point point = MouseInfo.getPointerInfo().getLocation();
-        Color pixel = robot.getPixelColor(point.x, point.y);
-        System.out.println("Location:x=" + point.x + ", y=" + point.y + "\t" + pixel);
-        mainPanel.setBackground(pixel);
-    }
-    
-    /**
-     * 获取屏幕中心点
-     * @return Dimension
-     */
-    public Dimension getScreenCentre(){
-        // 获取屏幕分辨率
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        return new Dimension(screenSize.width/2, screenSize.height/2);
+        // 获取光标位置之后，与上次比对，避免重复运行
+        mousePoint = MouseInfo.getPointerInfo().getLocation();
+        
+        if(mousePoint.equals(prevPoint)){
+            return;
+        }else{
+            prevPoint = mousePoint;
+        }
+        
+        Color pixel = robot.getPixelColor(mousePoint.x, mousePoint.y);
+        colorPanel.setBackground(pixel);
+
+        coordsJlabel.setText(String.format("[%d, %d]", mousePoint.x, mousePoint.y));
+        colorJlabel.setText(setColorLabel(pixel));
+
+        // 获取区域
+        getMouseArea();
     }
 
     /**
-     * 重置窗口大小
+     * 根据当前颜色模式显示颜色值
+     * @param Color c
+     * @return
      */
-    public Dimension getPreferredSize(){
-        return new Dimension(WIDTH, HEIGHT);
+    private String setColorLabel(Color c){
+        String s = "";
+        switch(currentColorMode){
+            case RGB:
+                s = String.format("%d, %d, %d", c.getRed(), c.getGreen(), c.getBlue());
+                break;
+            case HTML:
+                break;
+            case HEX:
+                break;
+            case HSL:
+                break;
+            case HSB:
+                break;
+            default:
+                break;
+        }
+        return s;
+        
     }
+
+    /**
+     * 获取鼠标区域
+     */
+    protected void getMouseArea(){
+
+        int x = mousePoint.x;
+        int y = mousePoint.y;
+        Rectangle r = new Rectangle (x-25, y-25, 25, 25);
+        areaImage = robot.createScreenCapture(r);
+     
+        repaint(); // 重绘，调用 paintComponent
+        System.out.println(r);
+    }
+    /**
+     * 放大屏幕
+     */
+    protected void zoom(){
+        
+    }
+
+    /**
+     * 绘制界面
+     */
+    public void paintComponent(Graphics g){
+        // 中间放大镜
+        Graphics2D g2 = (Graphics2D) g;
+        g2.drawImage(areaImage,120,10,null);
+        // 放大镜的十字线
+        g2.setPaint(Color.RED);
+        g2.draw(crossHorizontal);
+        g2.draw(crossVertical);
+
+    }
+
 }
 
 public class TakeColor{

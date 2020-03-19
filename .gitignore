@@ -1,0 +1,10 @@
+# build
+build/
+bin/
+
+
+# vscode & typora
+\.vscode/
+*.assets/
+
+
