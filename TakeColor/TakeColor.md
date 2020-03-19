@@ -221,13 +221,17 @@ g2.drawImage(areaImage,180,10,100,100,null);
 
 放大效果完成。
 
-之后添加边框，和原版的效果如下：
+之后添加边框，和原版对比的效果如下：
 
  ![zoom.png](http://image.acfuu.com/mdImages/202003/zoom.png)
 
 
 
 疑惑：在vscode中修改 paintComponent ，代码修改保存之后会即时的改变。这不是变成了脚本语言了么？
+
+### TakeColor v1.2
+
+这一版添加按键记录颜色
 
 
 

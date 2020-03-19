@@ -6,9 +6,15 @@ import java.awt.Toolkit;
 import java.awt.MouseInfo;
 import java.awt.AWTException;
 import java.awt.Robot;
+
+import javax.swing.Action;
+import javax.swing.ActionMap;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -19,6 +25,11 @@ import java.awt.Graphics;
 
 import java.awt.geom.*;
 
+import javax.swing.InputMap;
+import javax.swing.Action;
+import javax.swing.AbstractAction;
+import javax.awt.Event.ActionEvent;
+import javax.awt.Event.ActionListener;
 
 /**
  * frame
@@ -38,6 +49,7 @@ class TakeColorPanel extends JPanel{
     private static final int WIDTH = 350;
     private static final int HEIGHT = 200;
     private JPanel colorPanel; // 颜色展示面板
+    private JPanel recordPanel; // 颜色记录框
     private JLabel coordsJlabel; // 坐标信息
     private JLabel colorJlabel; // 颜色信息
     
@@ -87,13 +99,35 @@ class TakeColorPanel extends JPanel{
         crossVertical = new Line2D.Double(120, 10+50, 120+100, 10+50);
      
         // 右侧
-        
+        recordPanel = new JPanel();
+        recordPanel.setBounds(230, 10, 100, 100);
+        add(recordPanel);
+
+        // 键盘检测
+        Action recordAction = new RecordAction();  // '记录'动作
+        InputMap imap = recordPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        imap.put(KeyStroke.getKeyStroke("alt C"), "record.Color");
+        ActionMap amap = recordPanel.getActionMap();
+        amap.put("record.Color", recordAction);
+
 
         // 鼠标监听
         mouseListener();
     }
 
-        /**
+    public class RecordAction extends AbstractAction{
+        private static final long serialVersionUID = 1L;
+
+        public RecordAction() {
+            System.out.println("2123");
+        }
+         @override
+        public void actionPerformed(ActionEvent event){
+            System.out.println(mousePoint);
+        }
+    }
+
+    /**
      * 获取屏幕中心点
      * @return Dimension
      */
@@ -190,7 +224,6 @@ class TakeColorPanel extends JPanel{
         areaImage = robot.createScreenCapture(r);
      
         repaint(); // 重绘，调用 paintComponent
-        System.out.println(r);
     }
     /**
      * 放大屏幕
