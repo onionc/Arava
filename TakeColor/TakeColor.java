@@ -3,6 +3,7 @@ import java.awt.Point;
 import java.awt.Dimension;
 import java.awt.Color;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
 import java.awt.MouseInfo;
 import java.awt.AWTException;
 import java.awt.Robot;
@@ -15,6 +16,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 
+import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -26,15 +28,12 @@ import java.awt.Graphics;
 import java.awt.geom.*;
 
 import javax.swing.InputMap;
-import javax.swing.Action;
 import javax.swing.AbstractAction;
-import javax.awt.Event.ActionEvent;
-import javax.awt.Event.ActionListener;
 
 /**
  * frame
  */
-class TakeColorFrame extends JFrame{
+class TakeColorFrame extends JFrame {
     private static final long serialVersionUID = 1L;
 
     public TakeColorFrame() {
@@ -43,42 +42,52 @@ class TakeColorFrame extends JFrame{
     }
 }
 
-class TakeColorPanel extends JPanel{
+class TakeColorPanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
     private static final int WIDTH = 350;
     private static final int HEIGHT = 200;
-    private JPanel colorPanel; // 颜色展示面板
-    private JPanel recordPanel; // 颜色记录框
-    private JLabel coordsJlabel; // 坐标信息
-    private JLabel colorJlabel; // 颜色信息
-    
-    enum ColorMode {RGB, HTML, HEX, HSL, HSB}; // 颜色模式
-    ColorMode currentColorMode = ColorMode.RGB;
-
-    private Point mousePoint; // 光标点
-    private Image areaImage; // 待放大的图片
+    enum ColorMode {
+        RGB, HTML, HEX, HSL, HSB
+    }; // 颜色模式
 
     private Robot robot;
-    private int zoomValue = 3; // 放大倍数，（只会放大到100像素）
+    private final JPanel colorPanel; // 颜色展示面板
+    //private final JPanel recordPanel; // 颜色记录框
+    private final JLabel coordsJlabel; // 坐标信息
+    private final JLabel colorJlabel; // 颜色信息
+    private Point mousePoint; // 光标点
+    private Image areaImage; // 待放大的图片
+    private final int zoomValue = 3; // 放大倍数，（只会放大到100像素）
     private static final int ZoomMax = 100; // 总的放大倍数，不能更改
-    private int sideLength = ZoomMax/zoomValue;
-
+    private final int sideLength = ZoomMax / zoomValue;
     // 上一次的光标位置
     private Point prevPoint = null;
-
+    // 当前颜色模式
+    private static ColorMode currentColorMode = ColorMode.RGB;
     // 交叉线
-    Line2D crossHorizontal;
-    Line2D crossVertical;
+    private final Line2D crossHorizontal;
+    private final Line2D crossVertical;
+    // 记录颜色历史记录, 用LinkedList队列，
+    private int colorRecordMax = 5; // 记录的color record个数
+    private LinkedList<Color> colorQueue = new LinkedList<Color>(); 
+
+    // 边框
+    private final Rectangle2D colorRect = new Rectangle2D.Double();
+    private final Rectangle2D zoomRect = new Rectangle2D.Double();
+    private final Rectangle2D recordRect = new Rectangle2D.Double();
+    // 颜色记录时绘制边框
+    private static Rectangle2D colorRecordRect = new Rectangle2D.Double();
+    // private JLabel colorRecordValue[] = new JLabel[colorRecordMax];
+
     
-    public TakeColorPanel(){
+    public TakeColorPanel() {
         // 窗体居中
-        Dimension centre = this.getScreenCentre();
-        setLocation(centre.width - WIDTH/2, centre.height - HEIGHT/2);
+        final Dimension centre = this.getScreenCentre();
+        setLocation(centre.width - WIDTH / 2, centre.height - HEIGHT / 2);
 
         // 无布局方式
         setLayout(null);
-
 
         // 左侧的颜色框和显示的坐标，颜色值
         // 添加 panel 组件用来做颜色框
@@ -92,39 +101,58 @@ class TakeColorPanel extends JPanel{
         // 颜色值
         colorJlabel = new JLabel();
         colorJlabel.setBounds(10, 90, 100, 20);
+        
         add(colorJlabel);
 
-        // 中间的放大镜效果直接用图片绘制，这里需要十字线（位置10,120 大小100,100）
-        crossHorizontal = new Line2D.Double(120+50, 10, 120+50, 110);
+        // 放大镜的十字线（位置10,120 大小100,100）
+        crossHorizontal = new Line2D.Double(120+50, 10, 120+50, 10+100);
         crossVertical = new Line2D.Double(120, 10+50, 120+100, 10+50);
-     
-        // 右侧
-        recordPanel = new JPanel();
-        recordPanel.setBounds(230, 10, 100, 100);
-        add(recordPanel);
+
+        // 右侧 位置和大小230, 10, 100, 100
+        // 右侧的颜色值label，颜色直接绘制
+        // for(int i=0; i<colorRecordMax;i++){
+        //     colorRecordValue[i] = new JLabel("", JLabel.LEADING);
+        //     colorRecordValue[i].setOpaque(true); // 背景不透明  
+        //     colorRecordValue[i].setBounds(230, 10 + i*12, 100, (i+1)*12);
+        //     add(colorRecordValue[i]);
+        // }
+        
+        // add(recordPanel);
+        
 
         // 键盘检测
-        Action recordAction = new RecordAction();  // '记录'动作
-        InputMap imap = recordPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        final Action recordAction = new RecordAction(); // '记录'动作
+        final InputMap imap = colorPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         imap.put(KeyStroke.getKeyStroke("alt C"), "record.Color");
-        ActionMap amap = recordPanel.getActionMap();
+        final ActionMap amap = colorPanel.getActionMap();
         amap.put("record.Color", recordAction);
-
 
         // 鼠标监听
         mouseListener();
     }
 
-    public class RecordAction extends AbstractAction{
+    /**
+     * 按键alt+c触发此动作，用来记录颜色值
+     */
+    public class RecordAction extends AbstractAction {
         private static final long serialVersionUID = 1L;
 
         public RecordAction() {
             System.out.println("2123");
         }
-         @override
-        public void actionPerformed(ActionEvent event){
-            System.out.println(mousePoint);
+
+        @Override
+        public void actionPerformed(final ActionEvent event) {
+            // 记录当前的颜色
+            Color t = robot.getPixelColor(mousePoint.x, mousePoint.y);
+            // 从头进尾出，就可以满足绘制到顶部的记录是最新的
+            colorQueue.offerFirst(t);
+            if(colorQueue.size()>colorRecordMax){
+                colorQueue.pollLast(); // 删除尾
+            }
+            repaint();
         }
+
     }
 
     /**
@@ -133,7 +161,7 @@ class TakeColorPanel extends JPanel{
      */
     public Dimension getScreenCentre(){
         // 获取屏幕分辨率
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         return new Dimension(screenSize.width/2, screenSize.height/2);
     }
 
@@ -150,11 +178,11 @@ class TakeColorPanel extends JPanel{
     public void mouseListener() {
         try{
             robot = new Robot();
-        }catch(AWTException e){
+        }catch(final AWTException e){
             e.printStackTrace();
         }
 
-        Timer timer = new Timer();
+        final Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -176,7 +204,7 @@ class TakeColorPanel extends JPanel{
             prevPoint = mousePoint;
         }
         
-        Color pixel = robot.getPixelColor(mousePoint.x, mousePoint.y);
+        final Color pixel = robot.getPixelColor(mousePoint.x, mousePoint.y);
         colorPanel.setBackground(pixel);
 
         coordsJlabel.setText(String.format("[%d, %d]", mousePoint.x, mousePoint.y));
@@ -191,13 +219,14 @@ class TakeColorPanel extends JPanel{
      * @param Color c
      * @return
      */
-    private String setColorLabel(Color c){
+    private String setColorLabel(final Color c){
         String s = "";
         switch(currentColorMode){
             case RGB:
                 s = String.format("%d, %d, %d", c.getRed(), c.getGreen(), c.getBlue());
                 break;
             case HTML:
+                s = String.format("#%02x%02x%02x", c.getRed(), c.getGreen(), c.getBlue());
                 break;
             case HEX:
                 break;
@@ -213,34 +242,28 @@ class TakeColorPanel extends JPanel{
     }
 
     /**
-     * 获取鼠标区域
+     * 获取鼠标周围区域图片
      */
     protected void getMouseArea(){
 
-        int x = mousePoint.x;
-        int y = mousePoint.y;
+        final int x = mousePoint.x;
+        final int y = mousePoint.y;
         
-        Rectangle r = new Rectangle (x-sideLength/2, y-sideLength/2, sideLength, sideLength);
+        final Rectangle r = new Rectangle (x-sideLength/2, y-sideLength/2, sideLength, sideLength);
         areaImage = robot.createScreenCapture(r);
      
         repaint(); // 重绘，调用 paintComponent
-    }
-    /**
-     * 放大屏幕
-     */
-    protected void zoom(){
-        
     }
 
     /**
      * 绘制界面
      */
-    public void paintComponent(Graphics g){
+    public void paintComponent(final Graphics g){
         // 父类的paitComponent需要绘制其他默认的组件，比如左侧颜色框panel以及坐标和颜色值label。如果不执行，则绘制的区域会重叠
         super.paintComponent(g);
         
         // 中间放大镜
-        Graphics2D g2 = (Graphics2D) g;
+        final Graphics2D g2 = (Graphics2D) g;
         //g2.drawImage(areaImage,10,300,null); // 原大小
         g2.drawImage(areaImage,120,10,100,100,null);
         // 放大镜的十字线
@@ -248,25 +271,59 @@ class TakeColorPanel extends JPanel{
         g2.draw(crossHorizontal);
         g2.draw(crossVertical);
 
-
+        // 右侧颜色历史记录
+        paintColorRecord(g2);
+        
 
         // 绘制各组件的边框
+        paintBorder(g2);
+        
+    }
+
+    /**
+     * @param Graphics2D
+     * 绘制历史记录
+     */
+    private void paintColorRecord(final Graphics2D g2){
+        int i = 0;
+
+        for(Color c: colorQueue){
+            g2.setColor(c);
+            g2.setPaint(c);
+            colorRecordRect.setFrameFromDiagonal(230,10+20*i,230+100,10+20*(i+1));
+            g2.draw(colorRecordRect);
+            g2.fill(colorRecordRect);
+
+            // 放置颜色值
+            // g2.setPaint(Color.BLACK);
+            // colorRecordValue[i].setText(setColorLabel(c));
+            // colorRecordValue[i].setBackground(c);
+          
+            if(++i>colorRecordMax)
+                break;
+        }
+    }
+
+    /**
+     * @param Graphics2D
+     * 绘制边框
+     */
+    private void paintBorder(Graphics2D g2){
         g2.setPaint(Color.BLACK);
-        Rectangle2D colorRect = new Rectangle2D.Double();
-        Rectangle2D zoomRect = new Rectangle2D.Double();
-        //Rectangle2D colorRect = new Rectangle2D.Double();
         colorRect.setFrameFromDiagonal(10-1, 10-1, 110, 70);
         zoomRect.setFrameFromDiagonal(120-1, 10-1, 120+100, 110);
+        recordRect.setFrameFromDiagonal(230-1, 10-1, 230+100, 110);
         g2.draw(colorRect);
         g2.draw(zoomRect);
+        g2.draw(recordRect);
     }
 
 }
 
 public class TakeColor{
-    public static void main(String [] args){
+    public static void main(final String [] args){
         EventQueue.invokeLater(() -> {
-            TakeColorFrame f = new TakeColorFrame();
+            final TakeColorFrame f = new TakeColorFrame();
             f.setTitle("TakeColor");
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 设置关闭事件
             f.setVisible(true); // 显示窗体

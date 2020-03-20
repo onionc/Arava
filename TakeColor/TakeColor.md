@@ -233,7 +233,9 @@ g2.drawImage(areaImage,180,10,100,100,null);
 
 这一版添加按键记录颜色
 
+在实现按键动作的时候，继承AbstractAction 时，报错
 
+` The type TakeColorPanel.RecordAction must implement the inherited abstract method ActionListener.actionPerformed(ActionEvent)`。
 
 
 
