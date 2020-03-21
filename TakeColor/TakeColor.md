@@ -246,7 +246,7 @@ g2.fill(colorRecordRect);
 
 
 
-第二天发现 JLabel 高度是好着, 我将 setBounds() 的后两个参数宽高，写成了右下角坐标了。所以改用 JLabel 来设置背景色和显示文字：
+第二天发现 JLabel 高度是好着, 我将 setBounds() 的后两个参数宽高，写成右下角坐标了。所以改用 JLabel 来设置背景色和显示文字：
 
 ```java
 private JLabel colorRecordValue[] = new JLabel[colorRecordMax];
@@ -284,3 +284,48 @@ for(Color c: colorQueue){
 
 
 
+### TakeColor v1.3
+
+这一版添加颜色模式的 select 框、颜色输入框和复制。
+
+**下拉框**
+
+使用下拉框放置颜色模式，获取选项时可以直接使用 `colorModeCombo.getSelectedItem()` 而不是书中这种根据索引再获取 `colorModeCombo.getItemAt(colorModeCombo.getSelectedIndex())`，书中应该是用来展示各种用法的。
+
+将一个字符串赋值给枚举值时，需要使用 valueOf 方法将字符串转为枚举值，参考[如何判断枚举和字符串相等(最简便方法)](https://www.iteye.com/blog/nannan408-2194152)：
+
+```java
+enum A {  
+	a, b, c, d;  
+}  
+
+A aa = A.valueOf(A.class, "a");  
+System.out.println(aa == A.a);  
+```
+
+所以当选项改变，需要改变当前颜色模式：(selete 选项值转 String 是因为 getSlectedItem() 返回的是 current selected Object )
+
+```java
+colorModeCombo.addActionListener(event -> 
+{
+    currentColorMode = ColorMode.valueOf((String)colorModeCombo.getSelectedItem());
+});
+```
+
+颜色框和按钮都是常规的，访问剪切板参考[Java操作系统剪贴板(Clipboard)实现复制和粘贴](https://blog.csdn.net/xietansheng/article/details/70478266) 。
+
+我们的复刻取色器项目到这里就完成了，菜单不想加了，因为菜单加上去也最多加个放大倍数的效果，意义不大了。
+
+
+
+最终成果：上面是原工具，下面是复刻版
+
+ ![takecolor.png](http://image.acfuu.com/mdImages/202003/takecolor.png)
+
+
+
+Tips: 控制台编译时如果出现编码错误，可以指定编码编译`javac -encoding utf-8 TakeColor.java`
+
+
+
+$^{周六下午阴阴的天，听着歌，敲着没有什么实际意义代码感觉好舒服}$

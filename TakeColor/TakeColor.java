@@ -20,13 +20,22 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.InputMap;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.AbstractAction;
 
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
+
+// 剪切板相关
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.StringSelection;
+
 
 /**
  * frame
@@ -42,14 +51,15 @@ class TakeColorFrame extends JFrame {
 
 class TakeColorPanel extends JPanel {
 
-    private static final long serialVersionUID = 1L;
-    private static final int WIDTH = 350;
-    private static final int HEIGHT = 200;
     enum ColorMode {
-        RGB, HTML, HEX, HSL, HSB
+        RGB, HTML, HEX, HSB
     }; // 颜色模式
 
+    private static final long serialVersionUID = 1L;
+    private static final int WIDTH = 340;
+    private static final int HEIGHT = 150;
     private Robot robot;
+
     private final JPanel colorPanel; // 颜色展示面板
     //private final JPanel recordPanel; // 颜色记录框
     private final JLabel coordsJlabel; // 坐标信息
@@ -61,6 +71,8 @@ class TakeColorPanel extends JPanel {
     private final int sideLength = ZoomMax / zoomValue;
     // 上一次的光标位置
     private Point prevPoint = null;
+    // 当前的颜色，按键记录才记录163, 184, 204
+    private Color currentColor;
     // 当前颜色模式
     private static ColorMode currentColorMode = ColorMode.RGB;
     // 交叉线
@@ -69,6 +81,8 @@ class TakeColorPanel extends JPanel {
     // 记录颜色历史记录, 用LinkedList队列，
     private int colorRecordMax = 5; // 记录的color record个数
     private LinkedList<Color> colorQueue = new LinkedList<Color>(); 
+    // 颜色值展示框
+    JTextField showField;
 
     // 边框
     private final Rectangle2D colorRect = new Rectangle2D.Double();
@@ -76,7 +90,8 @@ class TakeColorPanel extends JPanel {
     private final Rectangle2D recordRect = new Rectangle2D.Double();
     // 颜色记录JLabel数组
     private JLabel colorRecordValue[] = new JLabel[colorRecordMax];
-
+    // hsb 数组
+    float[]  hsbArr;
     
     public TakeColorPanel() {
         // 窗体居中
@@ -98,7 +113,6 @@ class TakeColorPanel extends JPanel {
         // 颜色值
         colorJlabel = new JLabel();
         colorJlabel.setBounds(10, 90, 100, 20);
-        
         add(colorJlabel);
 
         // 放大镜的十字线（位置10,120 大小100,100）
@@ -113,8 +127,39 @@ class TakeColorPanel extends JPanel {
             add(colorRecordValue[i]);
         }
 
-        // 键盘检测
-        final Action recordAction = new RecordAction(); // '记录'动作
+        // 颜色模式选择框
+        JComboBox<String> colorModeCombo = new JComboBox<>();
+        for(ColorMode t : ColorMode.values()){
+            colorModeCombo.addItem(t.toString());
+        }
+        // 给选择框绑定一个事件，改变时触发，用来设置当前颜色模式
+        colorModeCombo.addActionListener(event -> {
+            currentColorMode = ColorMode.valueOf((String )colorModeCombo.getSelectedItem());
+        });
+        colorModeCombo.setBounds(10, 120, 100, 20);
+        add(colorModeCombo);
+
+        // 颜色值框体
+        showField = new JTextField();
+        showField.setEditable(false);
+        showField.setBounds(120, 120, 100, 20);
+        add(showField);
+        
+        // 复制按钮
+        JButton copyButton = new JButton("Copy");
+        copyButton.addActionListener(event -> {
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            // 封装文本内容
+            Transferable trans = new StringSelection(getColorText(currentColor));
+            // 把文本内容设置到系统剪贴板
+            clipboard.setContents(trans, null);
+
+        });
+        copyButton.setBounds(230, 120, 100, 20);
+        add(copyButton);
+
+        // 键盘检测事件
+        final Action recordAction = new KeypadAction(); // '记录'动作
         final InputMap imap = colorPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         imap.put(KeyStroke.getKeyStroke("alt C"), "record.Color");
         final ActionMap amap = colorPanel.getActionMap();
@@ -125,20 +170,26 @@ class TakeColorPanel extends JPanel {
     }
 
     /**
-     * 按键alt+c触发此动作，用来记录颜色值
+     * 按键动作
+     * alt+c 触发此动作，用来记录颜色值
      */
-    public class RecordAction extends AbstractAction {
+    public class KeypadAction extends AbstractAction {
         private static final long serialVersionUID = 1L;
 
         @Override
         public void actionPerformed(final ActionEvent event) {
             // 记录当前的颜色
-            Color t = robot.getPixelColor(mousePoint.x, mousePoint.y);
-            // 从头进尾出，就可以满足绘制到顶部的记录是最新的
-            colorQueue.offerFirst(t);
+            Color c = robot.getPixelColor(mousePoint.x, mousePoint.y);
+            currentColor = c;
+            
+            // 头进尾出，就可以满足绘制到顶部的记录是最新的
+            colorQueue.offerFirst(c);
             if(colorQueue.size()>colorRecordMax){
                 colorQueue.pollLast(); // 删除尾
             }
+
+            // 显示颜色值到文本框
+            showField.setText(getColorText(c));
             repaint();
         }
 
@@ -175,15 +226,16 @@ class TakeColorPanel extends JPanel {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                setPanelColor();
+                mouseAction();
             }
         }, 100, 100);
     }
 
     /**
+     * 鼠标事件
      * 获取位置和颜色，并显示位置和颜色信息
      */
-    private void setPanelColor(){
+    private void mouseAction(){
         // 获取光标位置之后，与上次比对，避免重复运行
         mousePoint = MouseInfo.getPointerInfo().getLocation();
         
@@ -209,6 +261,9 @@ class TakeColorPanel extends JPanel {
      * @return
      */
     private String getColorText(final Color c){
+        if(c == null){
+            return "";
+        }
         String s = "";
         switch(currentColorMode){
             case RGB:
@@ -218,10 +273,11 @@ class TakeColorPanel extends JPanel {
                 s = String.format("#%02x%02x%02x", c.getRed(), c.getGreen(), c.getBlue());
                 break;
             case HEX:
-                break;
-            case HSL:
+                s = String.format("0x%02X%02X%02X", c.getBlue(), c.getGreen(), c.getRed());
                 break;
             case HSB:
+                hsbArr = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), null);
+                s = String.format("%3.0f%% %3.0f%% %3.0f%%", hsbArr[0]*100, hsbArr[1]*100, hsbArr[2]*100);
                 break;
             default:
                 break;
@@ -263,10 +319,12 @@ class TakeColorPanel extends JPanel {
         // 右侧颜色历史记录
         paintColorRecord(g2);
         
-
         // 绘制各组件的边框
         paintBorder(g2);
-        
+
+        // 颜色值重新赋值，因为可能有模式的改变
+        showField.setText(getColorText(currentColor));
+
     }
 
     /**

@@ -17,9 +17,10 @@
 
 **3月**
 
-- 2020-3-17 [TakeColor](https://github.com/onionc/Arava/tree/master/TakeColor)_v1.0. [取色器](https://github.com/onionc/Arava/blob/master/TakeColor/TakeColor.md)之屏幕取色
+- 2020-3-17 [TakeColor](https://github.com/onionc/Arava/tree/master/TakeColor) v1.0. [取色器](https://github.com/onionc/Arava/blob/master/TakeColor/TakeColor.md)之屏幕取色
 - 2020-3-18 TakeColor v1.1. 增加颜色显示和放大镜功能
 - 2020-3-19 TakeColor v1.2. 按键记录历史颜色
+- 2020-2-20 TakeColor v1.3. 颜色模式更改的 select 框、颜色框和复制按钮
 
 
 
@@ -31,10 +32,11 @@
 
 - 取色器
 - 色盘（列出互补色，荔枝一个调色课程中听到的，需要补一点互补色知识）
-- （代码条数统计）
+- 代码条数统计（展示方式待定，web or app）
 - qrcode 纠错算法
 - qrcode 生成
 - 贪吃蛇（队列）
 - 推箱子复刻版
 - 录制gif
+- 日志-事件记录
 
