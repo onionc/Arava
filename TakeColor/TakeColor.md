@@ -231,12 +231,56 @@ g2.drawImage(areaImage,180,10,100,100,null);
 
 ### TakeColor v1.2
 
-这一版添加按键记录颜色，但是没有在颜色添加上颜色值（JLabel样式不会调）。
+这一版添加按键记录颜色历史。
 
-效果如下：
+但是没有在颜色添加上颜色值（JLabel样式好像有边框，设置的高度总是不对，不会调），直接用填充矩形来展示颜色历史：
+
+```java
+// 右侧用矩形填充颜色
+colorRecordRect.setFrameFromDiagonal(230,10+20*i,230+100,10+20*(i+1));
+g2.draw(colorRecordRect);
+g2.fill(colorRecordRect);
+```
 
  ![colorRecord.png](http://image.acfuu.com/mdImages/202003/colorRecord.png)
 
+
+
+第二天发现 JLabel 高度是好着, 我将 setBounds() 的后两个参数宽高，写成了右下角坐标了。所以改用 JLabel 来设置背景色和显示文字：
+
+```java
+private JLabel colorRecordValue[] = new JLabel[colorRecordMax];
+......
+// label 组件添加
+// 右侧的颜色背景和颜色值label。位置和大小230, 10, 100, 100
+for(int i=0; i<colorRecordMax;i++){
+    colorRecordValue[i] = new JLabel();
+    colorRecordValue[i].setOpaque(true); // 背景不透明  
+    colorRecordValue[i].setBounds(230, 10 + i*20, 100, 20);
+    add(colorRecordValue[i]);
+}
+......
+// 显示颜色
+for(Color c: colorQueue){
+    Color penC = new Color(255-c.getRed(), 255-c.getGreen(), 255-c.getBlue()); // 反色
+    // 字体颜色设置
+    colorRecordValue[i].setForeground(penC);
+    colorRecordValue[i].setText(getColorText(c));
+    // 背景色
+    colorRecordValue[i].setBackground(c);
+    
+    if(++i>colorRecordMax)
+		break;
+}
+```
+
+注意，设置 JLabel 背景颜色的时候需要设置背景不透明 `jlabel.setOpaque(true);`
+
+文字颜色值不能一直是黑色，不然黑色背景就会看不到。这里取反色，即 Color(255-R, 255-G, 255-B) 的值。
+
+效果如下：
+
+ ![tkv1.2.png](http://image.acfuu.com/mdImages/202003/tkv1.2.png)
 
 
 

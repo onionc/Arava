@@ -7,6 +7,12 @@ import java.awt.event.ActionEvent;
 import java.awt.MouseInfo;
 import java.awt.AWTException;
 import java.awt.Robot;
+import java.awt.Image;
+import java.awt.Rectangle;
+import java.awt.Graphics2D;
+import java.awt.Graphics;
+import java.awt.geom.Line2D;
+import java.awt.geom.Rectangle2D;
 
 import javax.swing.Action;
 import javax.swing.ActionMap;
@@ -15,20 +21,12 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+import javax.swing.InputMap;
+import javax.swing.AbstractAction;
 
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import java.awt.Image;
-import java.awt.Rectangle;
-import java.awt.Graphics2D;
-import java.awt.Graphics;
-
-import java.awt.geom.*;
-
-import javax.swing.InputMap;
-import javax.swing.AbstractAction;
 
 /**
  * frame
@@ -76,9 +74,8 @@ class TakeColorPanel extends JPanel {
     private final Rectangle2D colorRect = new Rectangle2D.Double();
     private final Rectangle2D zoomRect = new Rectangle2D.Double();
     private final Rectangle2D recordRect = new Rectangle2D.Double();
-    // 颜色记录时绘制边框
-    private static Rectangle2D colorRecordRect = new Rectangle2D.Double();
-    // private JLabel colorRecordValue[] = new JLabel[colorRecordMax];
+    // 颜色记录JLabel数组
+    private JLabel colorRecordValue[] = new JLabel[colorRecordMax];
 
     
     public TakeColorPanel() {
@@ -108,17 +105,13 @@ class TakeColorPanel extends JPanel {
         crossHorizontal = new Line2D.Double(120+50, 10, 120+50, 10+100);
         crossVertical = new Line2D.Double(120, 10+50, 120+100, 10+50);
 
-        // 右侧 位置和大小230, 10, 100, 100
-        // 右侧的颜色值label，颜色直接绘制
-        // for(int i=0; i<colorRecordMax;i++){
-        //     colorRecordValue[i] = new JLabel("", JLabel.LEADING);
-        //     colorRecordValue[i].setOpaque(true); // 背景不透明  
-        //     colorRecordValue[i].setBounds(230, 10 + i*12, 100, (i+1)*12);
-        //     add(colorRecordValue[i]);
-        // }
-        
-        // add(recordPanel);
-        
+        // 右侧的颜色背景和颜色值label。位置和大小230, 10, 100, 100
+        for(int i=0; i<colorRecordMax;i++){
+            colorRecordValue[i] = new JLabel();
+            colorRecordValue[i].setOpaque(true); // 背景不透明  
+            colorRecordValue[i].setBounds(230, 10 + i*20, 100, 20);
+            add(colorRecordValue[i]);
+        }
 
         // 键盘检测
         final Action recordAction = new RecordAction(); // '记录'动作
@@ -136,10 +129,6 @@ class TakeColorPanel extends JPanel {
      */
     public class RecordAction extends AbstractAction {
         private static final long serialVersionUID = 1L;
-
-        public RecordAction() {
-            System.out.println("2123");
-        }
 
         @Override
         public void actionPerformed(final ActionEvent event) {
@@ -208,7 +197,7 @@ class TakeColorPanel extends JPanel {
         colorPanel.setBackground(pixel);
 
         coordsJlabel.setText(String.format("[%d, %d]", mousePoint.x, mousePoint.y));
-        colorJlabel.setText(setColorLabel(pixel));
+        colorJlabel.setText(getColorText(pixel));
 
         // 获取区域
         getMouseArea();
@@ -219,7 +208,7 @@ class TakeColorPanel extends JPanel {
      * @param Color c
      * @return
      */
-    private String setColorLabel(final Color c){
+    private String getColorText(final Color c){
         String s = "";
         switch(currentColorMode){
             case RGB:
@@ -288,16 +277,12 @@ class TakeColorPanel extends JPanel {
         int i = 0;
 
         for(Color c: colorQueue){
-            g2.setColor(c);
-            g2.setPaint(c);
-            colorRecordRect.setFrameFromDiagonal(230,10+20*i,230+100,10+20*(i+1));
-            g2.draw(colorRecordRect);
-            g2.fill(colorRecordRect);
-
-            // 放置颜色值
-            // g2.setPaint(Color.BLACK);
-            // colorRecordValue[i].setText(setColorLabel(c));
-            // colorRecordValue[i].setBackground(c);
+            Color penC = new Color(255-c.getRed(), 255-c.getGreen(), 255-c.getBlue()); // 反色
+            // 字体颜色设置
+            colorRecordValue[i].setForeground(penC);
+            colorRecordValue[i].setText(getColorText(c));
+            
+            colorRecordValue[i].setBackground(c);
           
             if(++i>colorRecordMax)
                 break;
