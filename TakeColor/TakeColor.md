@@ -207,10 +207,7 @@ class TakeColorPanel extends JPanel{
  ![drawImage.png](http://image.acfuu.com/mdImages/202003/drawImage.png)
 
 
-
-
-
-对于50\*50像素的图片，对于下面的代码， 第二行会显示放大1倍的效果（变成了100\*100）
+对于50\*50像素的图片，使用下面的代码， 第二行会显示放大1倍的效果（变成了100\*100）
 
 ```
 g2.drawImage(areaImage,120,10,null);
@@ -219,15 +216,9 @@ g2.drawImage(areaImage,180,10,100,100,null);
 
  ![drawImageCompare.png](http://image.acfuu.com/mdImages/202003/drawImageCompare.png)
 
-放大效果完成。
-
-之后添加边框，和原版对比的效果如下：
+放大效果完成。之后添加边框，和原版对比的效果如下：
 
  ![zoom.png](http://image.acfuu.com/mdImages/202003/zoom.png)
-
-
-
-疑惑：在vscode中修改 paintComponent ，代码修改保存之后会即时的改变。这不是变成了脚本语言了么？
 
 ### TakeColor v1.2
 
