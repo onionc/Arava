@@ -97,7 +97,7 @@ class TakeColorPanel extends JPanel {
         // 窗体居中
         final Dimension centre = this.getScreenCentre();
         setLocation(centre.width - WIDTH / 2, centre.height - HEIGHT / 2);
-
+System.out.println((centre.width - WIDTH / 2) + " " + ( centre.height - HEIGHT / 2));
         // 无布局方式
         setLayout(null);
 
