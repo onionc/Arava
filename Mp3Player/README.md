@@ -7,7 +7,7 @@
 
 ### 界面和命令解析
 
-// todo
+添加滚动条之后，文本框也不显示了，原来加了滚动条后是要设置滚动条的位置和大小`jScrollPane.setBounds(x,x,x,x) `。[java中向JTextArea中添加滚动条(垂直的和水平的)](https://www.cnblogs.com/wangkundentisy/p/3684217.html) 
 
 ### 播放 mp3，获取时长
 

@@ -1,8 +1,10 @@
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-
+import javax.swing.text.DefaultCaret;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.SourceDataLine;
@@ -22,9 +24,12 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.MatteBorder;
 import javax.swing.KeyStroke;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 
 import java.awt.EventQueue;
@@ -36,6 +41,7 @@ import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.BorderLayout;
 
 
 class AudioPlayer {
@@ -45,7 +51,7 @@ class AudioPlayer {
     AudioFormat audioFormat; // 文件格式
     SourceDataLine sourceDataLine; // 输出设备
 
-    public AudioPlayer(File file) {
+    public AudioPlayer(final File file) {
         this.file = file;
     }
 
@@ -67,7 +73,7 @@ class AudioPlayer {
 
             in.close();
 
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // System.out.printf("file %s not found\n", file.toURI().toString());
             // }catch(JavaLayerException e){
             System.out.printf("Failed to get sources\n");
@@ -77,9 +83,9 @@ class AudioPlayer {
     /**
      * 原始播放
      */
-    private void rawplay(AudioFormat targetFormat, AudioInputStream din) throws IOException, LineUnavailableException {
-        byte[] data = new byte[4096];
-        SourceDataLine line = getLine(targetFormat);
+    private void rawplay(final AudioFormat targetFormat, final AudioInputStream din) throws IOException, LineUnavailableException {
+        final byte[] data = new byte[4096];
+        final SourceDataLine line = getLine(targetFormat);
         if (line != null) {
             // Start
             line.start();
@@ -103,9 +109,9 @@ class AudioPlayer {
      * @return
      * @throws LineUnavailableException
      */
-    private SourceDataLine getLine(AudioFormat audioFormat) throws LineUnavailableException {
+    private SourceDataLine getLine(final AudioFormat audioFormat) throws LineUnavailableException {
         SourceDataLine res = null;
-        DataLine.Info info = new DataLine.Info(SourceDataLine.class, audioFormat);
+        final DataLine.Info info = new DataLine.Info(SourceDataLine.class, audioFormat);
         res = (SourceDataLine) AudioSystem.getLine(info);
         res.open(audioFormat);
         return res;
@@ -138,9 +144,7 @@ Point position = new Point(10, 10);
     public PlayerFrame() {
         add(new PlayerPanel(this));
         //setUndecorated(true); // 关闭所有框架装饰
-        System.out.println("sdsdf");
         pack();
-
     }
 }
     
@@ -149,45 +153,65 @@ class PlayerPanel extends JPanel {
     private static final int WIDTH = 350;
     private static final int HEIGHT = 150;
     // 显示框
-    JLabel showBox;
-    String showHelpMsg = "<html>/h 帮助<br/>/q 退出<br/>/c 清屏<br/></html>";
+    JTextArea showBox;
+    String showHelpMsg = "[/h] 帮助\n[/q] 退出\n[/move x y] 移动窗口位置到x,y\n[/c] 清屏\n[open xxx] 打开歌曲目录xxx\n/[play id] 播放编号为id的歌曲";
     String showMsg = showHelpMsg;
     // 命令框
     JTextField commandField;
 
     // 绿色
-    final Color GREEN = new Color(88, 124, 12); 
+    final Color GREEN = new Color(88, 124, 12);
 
-PlayerFrame pf;
+    // frame object
+    PlayerFrame pf;
 
-    public PlayerPanel(PlayerFrame pf) {
+    public PlayerPanel(final PlayerFrame pf) {
         this.pf = pf;
         setBackground(Color.BLACK);
         // 布局方式：无
         setLayout(null);
 
         // 添加一个展示框
-        showBox = new JLabel("", SwingConstants.LEFT);
+        showBox = new JTextArea(100, 100);
         showBox.setBounds(0, 0, 350, 120);
         showBox.setForeground(GREEN);
+        showBox.setBackground(Color.BLACK);
+        showBox.setLineWrap(true); // 自动换行
+        showBox.setWrapStyleWord(true); // 超过即换行
         showBox.setFont(new Font(Font.SERIF, Font.BOLD, 15));
-        add(showBox);
+        MatteBorder showBoxField = new MatteBorder(0, 1, 0, 0, Color.BLACK);
+        showBox.setBorder(showBoxField);
+        System.out.println(showBox.getWrapStyleWord());
+        showBox.setFocusable(false); // 不获取焦点
+        
+       
+        // add(showBox);
+        // 添加滚动条
+        JScrollPane js = new JScrollPane(showBox);
+        js.setBounds(0, 0, 350, 120);
+        js.setBorder(showBoxField);
+        //分别设置水平和垂直滚动条总是隐藏
+        js.setHorizontalScrollBarPolicy(
+        JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        js.setVerticalScrollBarPolicy(
+        JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        add(js);
 
         // 添加一个命令输入框
         commandField = new JTextField();
         commandField.setBounds(0, 130, 350, 20);
         commandField.setBackground(Color.BLACK);
-        MatteBorder borderField = new MatteBorder(0, 1, 1, 0, GREEN);
+        final MatteBorder borderField = new MatteBorder(0, 1, 1, 0, GREEN);
         commandField.setBorder(borderField);
         commandField.setForeground(Color.GREEN);
         commandField.setFont(new Font(Font.SERIF, Font.BOLD, 14));
         add(commandField);
 
         // 回车
-        Action enterAction = new EnterAction();
-        InputMap imap = commandField.getInputMap(JComponent.WHEN_FOCUSED);
+        final Action enterAction = new EnterAction();
+        final InputMap imap = commandField.getInputMap(JComponent.WHEN_FOCUSED);
         imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "command.enter");
-        ActionMap amap = commandField.getActionMap();
+        final ActionMap amap = commandField.getActionMap();
         amap.put("command.enter", enterAction);
 
     }
@@ -203,11 +227,12 @@ PlayerFrame pf;
         private static final long serialVersionUID = 1L;
 
         @Override
-        public void actionPerformed(ActionEvent e) {
-            String commandStr = commandField.getText();
+        public void actionPerformed(final ActionEvent e) {
+            final String commandStr = commandField.getText();
             commandField.setText("");
             // 执行命令
             parseCommand(commandStr);
+            repaint();
         }
         
     }
@@ -216,11 +241,11 @@ PlayerFrame pf;
      * 解析命令
      * @param command
      */
-    public void parseCommand(String commandStr){
+    public void parseCommand(final String commandStr){
         System.out.println(showBox.getText());
         String newMsg = "";
         String commandKey = "", commandValue = "";
-        String[] t = commandStr.split("\\s+");
+        final String[] t = commandStr.split("\\s+");
         try{
             int i=0;
             // 获取命令字符串，有空值则跳过
@@ -234,17 +259,16 @@ PlayerFrame pf;
                     case "/h":
                         showMsg = showHelpMsg;
                         break;
-    
                     case "/c":
-                        showMsg = "<html></html>";
+                        showMsg = "";
                         break;
     
                     case "/q":
                         System.exit(0);
-                        break;
-                    case "/position":
-                        int x = Integer.valueOf(t[i++]);
-                        int y = Integer.valueOf(t[i++]);
+                        return;
+                    case "/move":
+                        final int x = Integer.valueOf(t[i++]);
+                        final int y = Integer.valueOf(t[i++]);
                         this.pf.setLocation(x,y);
                         newMsg = "窗口位置已重置";
                         break;
@@ -252,43 +276,87 @@ PlayerFrame pf;
             }else{
                 // 命令值
                 commandValue = t[i];
-                newMsg = commandKey + " " + commandValue;
+                String r = Command.runCommand(commandKey, commandValue);
+                newMsg = commandKey + " " + commandValue + "<br/>" + r;
+                
             }
-           
-            
-            
-        }catch(ArrayIndexOutOfBoundsException e){
+        }catch(final ArrayIndexOutOfBoundsException e){
             newMsg = "命令错误";
         }
         
         if(newMsg.length()>0){
-            //showMsg = showMsg.substring(0, showMsg.length()-"</html>".length()) + addMsg + "<br/></html>";
-            showMsg = "<html>"+ newMsg +"</html>";
+            showMsg = showBox.getText() + "\n" + newMsg;
+            //showBox.append(newMsg);
         }
-       
-        showBox.setText(showMsg);
+        return;
     }
+
+
 
     /**
      * 重绘界面
      */
-    public void paintComponent(Graphics g){
+    public void paintComponent(final Graphics g){
         
 
         super.paintComponent(g);
-        final Graphics2D g2 = (Graphics2D) g;
+        //final Graphics2D g2 = (Graphics2D) g;
         // 位置重置
         
-        
+        // 显示框刷新
         showBox.setText(showMsg);
+
     }
     
 }
 
+class Command{
+        /**
+     * 执行普通命令
+     * @param key
+     * @param value
+     */
+    public static String runCommand(String key, String value){
+        if(key.equals("open")){
+            //try{
+                File path = new File(value);
+
+                if(!path.exists()){
+                   return path.toURI().toString() + " 目录未找到."; 
+                }
+                
+                getMusicFiles(path);
+            
+        }
+        return "sss";
+    }
+
+    /**
+     * 获取目录下的mp3文件
+     * @param path
+     * @return
+     */
+    private static List<File> getMusicFiles(File path){
+        List<File> musics = new ArrayList<File>();
+
+        if(!path.exists()) return null;
+
+        File[] files = path.listFiles();
+        System.out.println(files);
+        for(File f : files){
+            if(f.toString().endsWith(".mp3")){
+                musics.add(f);
+            }
+        }
+
+        return musics;
+    }
+}
+
 public class Mp3Player{
-    public static void main(String[] args) throws IOException{
+    public static void main(final String[] args) throws IOException{
         EventQueue.invokeLater(() -> {
-            PlayerFrame f = new PlayerFrame();
+            final PlayerFrame f = new PlayerFrame();
             //f.setTitle("MP3播放器");
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 设置关闭事件
             f.setVisible(true); // 显示窗体
