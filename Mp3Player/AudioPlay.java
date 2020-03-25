@@ -21,7 +21,7 @@ class AudioPlay {
     AudioFormat audioFormat; // 文件格式
     SourceDataLine sourceDataLine; // 输出设备
 
-    public AudioPlayer(final File file) {
+    public AudioPlay(File file) {
         this.file = file;
     }
 
@@ -44,8 +44,6 @@ class AudioPlay {
             in.close();
 
         } catch (final Exception e) {
-            // System.out.printf("file %s not found\n", file.toURI().toString());
-            // }catch(JavaLayerException e){
             System.out.printf("Failed to get sources\n");
         }
     }

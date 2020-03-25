@@ -48,12 +48,10 @@ import java.awt.Rectangle;
 class PlayerFrame extends JFrame {
 
     private static final long serialVersionUID = 1L;
-    MusicFile musics;
     public PlayerFrame() {
         add(new PlayerPanel(this));
         setUndecorated(true); // 关闭所有框架装饰
         pack();
-        this.musics = new MusicFile();
     }
 }
     
@@ -93,7 +91,6 @@ class PlayerPanel extends JPanel {
         System.out.println(showBox.getWrapStyleWord());
         showBox.setFocusable(false); // 不获取焦点
         
-       System.out.prinln(this.musics);
         // add(showBox);
         // 添加滚动条
         JScrollPane js = new JScrollPane(showBox);
@@ -158,15 +155,7 @@ class PlayerPanel extends JPanel {
                     parseCommand(commandStr);
                     repaint();
                     break;
-                case "up":
-                
-                // JScrollBar bar  = js.getVerticalScrollBar();
-                
-                // Rectangle a = js.getViewportBorderBounds();// setBorder(showBoxField);
-                // System.out.println(a.height);
-                // System.out.println(bar.getHeight());
-                // bar.setValue(a.height-10);
-                    break;
+
                 default:
                     break;
             }
@@ -180,7 +169,7 @@ class PlayerPanel extends JPanel {
      * @param command
      */
     public void parseCommand(final String commandStr){
-        System.out.println(showBox.getText());
+
         String newMsg = "";
         String commandKey = "", commandValue = "";
         final String[] t = commandStr.split("\\s+");
@@ -227,6 +216,7 @@ class PlayerPanel extends JPanel {
             showMsg = showBox.getText() + "\n" + newMsg;
             //showBox.append(newMsg);
         }
+
         return;
     }
 
@@ -257,45 +247,39 @@ class Command{
      */
     public static String runCommand(String key, String value){
         String msg = "";
-        if(key.equals("open")){
-            //try{
+        switch(key){
+            case "open":
                 File path = new File(value);
                 String dir = path.toURI().toString();
                 if(!path.exists()){
                    msg = dir + " 目录未找到."; 
                 }else{
-                    List<File> musics = getMusicFiles(path);
-                    int sum = musics.size();
-                    if(sum > 0){
-                        msg = String.format("%s 目录下共 %d 首歌曲", dir, sum);
+                    int count = MusicFile.getInstance().getMusicFiles(path);
+                    if(count > 0){
+                        msg = String.format("%s 目录下共 %d 首歌曲", dir, count);
                     }else{
                         msg = String.format("%s 目录下无 mp3 后缀歌曲", dir);
                     }
                 }
+                break;
+            case "play":
+                if(MusicFile.getInstance().getCount() > 0){
+                    File f = MusicFile.getInstance().getMusic();
+                    (new AudioPlay(f)).play();
+
+                }else{
+                    msg = "此目录下无歌曲，请先指定目录 [open xxx]";
+                }
+                break;
+
+            default:
+                break;
         }
+        
         return msg;
     }
 
-    /**
-     * 获取目录下的mp3文件
-     * @param path
-     * @return
-     */
-    private static List<File> getMusicFiles(File path){
-        List<File> musics = new ArrayList<File>();
 
-        if(!path.exists()) return null;
-
-        File[] files = path.listFiles();
-        System.out.println(files);
-        for(File f : files){
-            if(f.toString().endsWith(".mp3")){
-                musics.add(f);
-            }
-        }
-
-        return musics;
-    }
 }
 
 public class Mp3Player{
