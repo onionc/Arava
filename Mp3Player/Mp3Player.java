@@ -24,6 +24,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -42,109 +43,17 @@ import java.awt.event.KeyEvent;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.BorderLayout;
-
-
-class AudioPlayer {
-
-    File file;
-    AudioInputStream in; // 文件流
-    AudioFormat audioFormat; // 文件格式
-    SourceDataLine sourceDataLine; // 输出设备
-
-    public AudioPlayer(final File file) {
-        this.file = file;
-    }
-
-    public void play() {
-        try {
-            // 取得文件输入流
-            in = AudioSystem.getAudioInputStream(file);
-            audioFormat = in.getFormat();
-            // 转换 mp3 文件编码
-            if (audioFormat.getEncoding() != AudioFormat.Encoding.PCM_SIGNED) {
-                audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, audioFormat.getSampleRate(), 16,
-                        audioFormat.getChannels(), audioFormat.getChannels() * 2, audioFormat.getSampleRate(), false);
-                in = AudioSystem.getAudioInputStream(audioFormat, in);
-            }
-
-            getProperties();
-            // 播放
-            rawplay(audioFormat, in);
-
-            in.close();
-
-        } catch (final Exception e) {
-            // System.out.printf("file %s not found\n", file.toURI().toString());
-            // }catch(JavaLayerException e){
-            System.out.printf("Failed to get sources\n");
-        }
-    }
-
-    /**
-     * 原始播放
-     */
-    private void rawplay(final AudioFormat targetFormat, final AudioInputStream din) throws IOException, LineUnavailableException {
-        final byte[] data = new byte[4096];
-        final SourceDataLine line = getLine(targetFormat);
-        if (line != null) {
-            // Start
-            line.start();
-            int nBytesRead = 0;
-            while (nBytesRead != -1) {
-                nBytesRead = din.read(data, 0, data.length);
-                if (nBytesRead != -1)
-                    line.write(data, 0, nBytesRead);
-            }
-            // Stop
-            line.drain();
-            line.stop();
-            line.close();
-            din.close();
-        }
-    }
-
-    /**
-     * 
-     * @param audioFormat
-     * @return
-     * @throws LineUnavailableException
-     */
-    private SourceDataLine getLine(final AudioFormat audioFormat) throws LineUnavailableException {
-        SourceDataLine res = null;
-        final DataLine.Info info = new DataLine.Info(SourceDataLine.class, audioFormat);
-        res = (SourceDataLine) AudioSystem.getLine(info);
-        res.open(audioFormat);
-        return res;
-    }
-
-    /**
-     * 获取属性
-     */
-    private Map getProperties() throws UnsupportedAudioFileException, IOException {
-        AudioFileFormat baseFileFormat = null;
-        baseFileFormat = AudioSystem.getAudioFileFormat(file);
-
-        Map properties = null;
-        // TAudioFileFormat properties
-        if (baseFileFormat instanceof TAudioFileFormat) {
-            properties = ((TAudioFileFormat) baseFileFormat).properties();
-            System.out.println(properties);
-        }
-        return properties;
-    }
-
-    // private String
-}
+import java.awt.Rectangle;
 
 class PlayerFrame extends JFrame {
 
     private static final long serialVersionUID = 1L;
-// 窗口位置
-Point position = new Point(10, 10);
+    MusicFile musics;
     public PlayerFrame() {
         add(new PlayerPanel(this));
-        //setUndecorated(true); // 关闭所有框架装饰
+        setUndecorated(true); // 关闭所有框架装饰
         pack();
+        this.musics = new MusicFile();
     }
 }
     
@@ -154,7 +63,7 @@ class PlayerPanel extends JPanel {
     private static final int HEIGHT = 150;
     // 显示框
     JTextArea showBox;
-    String showHelpMsg = "[/h] 帮助\n[/q] 退出\n[/move x y] 移动窗口位置到x,y\n[/c] 清屏\n[open xxx] 打开歌曲目录xxx\n/[play id] 播放编号为id的歌曲";
+    String showHelpMsg = "[/h] 帮助\n[/q] 退出\n[/move x y] 移动窗口位置到x,y\n[/c] 清屏\n[open xxx] 打开歌曲目录xxx\n[play id] 播放编号为id的歌曲";
     String showMsg = showHelpMsg;
     // 命令框
     JTextField commandField;
@@ -179,22 +88,21 @@ class PlayerPanel extends JPanel {
         showBox.setLineWrap(true); // 自动换行
         showBox.setWrapStyleWord(true); // 超过即换行
         showBox.setFont(new Font(Font.SERIF, Font.BOLD, 15));
-        MatteBorder showBoxField = new MatteBorder(0, 1, 0, 0, Color.BLACK);
-        showBox.setBorder(showBoxField);
+        MatteBorder noBorder = new MatteBorder(0, 0, 0, 0, Color.BLACK);
+        showBox.setBorder(noBorder);
         System.out.println(showBox.getWrapStyleWord());
         showBox.setFocusable(false); // 不获取焦点
         
-       
+       System.out.prinln(this.musics);
         // add(showBox);
         // 添加滚动条
         JScrollPane js = new JScrollPane(showBox);
         js.setBounds(0, 0, 350, 120);
-        js.setBorder(showBoxField);
+        js.setBorder(noBorder);
         //分别设置水平和垂直滚动条总是隐藏
-        js.setHorizontalScrollBarPolicy(
-        JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        js.setVerticalScrollBarPolicy(
-        JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        js.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        js.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        js.getVerticalScrollBarPolicy();
         add(js);
 
         // 添加一个命令输入框
@@ -207,12 +115,14 @@ class PlayerPanel extends JPanel {
         commandField.setFont(new Font(Font.SERIF, Font.BOLD, 14));
         add(commandField);
 
-        // 回车
-        final Action enterAction = new EnterAction();
-        final InputMap imap = commandField.getInputMap(JComponent.WHEN_FOCUSED);
+        // 键盘事件
+        InputMap imap = commandField.getInputMap(JComponent.WHEN_FOCUSED);
+        // 回车，输入命令
         imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "command.enter");
-        final ActionMap amap = commandField.getActionMap();
-        amap.put("command.enter", enterAction);
+        commandField.getActionMap().put("command.enter", new KeyboardAction("enter"));
+        // 右箭头，下一曲
+        imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "command.right");
+        commandField.getActionMap().put("command.right", new KeyboardAction("next", js));
 
     }
 
@@ -221,18 +131,46 @@ class PlayerPanel extends JPanel {
     }
 
     /**
-     * 回车动作
+     * 键盘动作
      */
-    private class EnterAction extends AbstractAction {
+    private class KeyboardAction extends AbstractAction {
         private static final long serialVersionUID = 1L;
+
+        private String name;
+        private JScrollPane js;
+        public KeyboardAction(String name) {
+            this.name = name;
+        }
+
+        public KeyboardAction(String name, JScrollPane js){
+            this.name = name;
+            this.js = js;
+        }
 
         @Override
         public void actionPerformed(final ActionEvent e) {
-            final String commandStr = commandField.getText();
-            commandField.setText("");
-            // 执行命令
-            parseCommand(commandStr);
-            repaint();
+            System.out.println(this.name);
+            switch(this.name){
+                case "enter":
+                    final String commandStr = commandField.getText();
+                    commandField.setText("");
+                    // 执行命令
+                    parseCommand(commandStr);
+                    repaint();
+                    break;
+                case "up":
+                
+                // JScrollBar bar  = js.getVerticalScrollBar();
+                
+                // Rectangle a = js.getViewportBorderBounds();// setBorder(showBoxField);
+                // System.out.println(a.height);
+                // System.out.println(bar.getHeight());
+                // bar.setValue(a.height-10);
+                    break;
+                default:
+                    break;
+            }
+            
         }
         
     }
@@ -277,11 +215,12 @@ class PlayerPanel extends JPanel {
                 // 命令值
                 commandValue = t[i];
                 String r = Command.runCommand(commandKey, commandValue);
-                newMsg = commandKey + " " + commandValue + "<br/>" + r;
+                newMsg = commandKey + " " + commandValue + "\n" + r;
                 
             }
         }catch(final ArrayIndexOutOfBoundsException e){
-            newMsg = "命令错误";
+            // 命令错误
+            newMsg = "";
         }
         
         if(newMsg.length()>0){
@@ -317,18 +256,24 @@ class Command{
      * @param value
      */
     public static String runCommand(String key, String value){
+        String msg = "";
         if(key.equals("open")){
             //try{
                 File path = new File(value);
-
+                String dir = path.toURI().toString();
                 if(!path.exists()){
-                   return path.toURI().toString() + " 目录未找到."; 
+                   msg = dir + " 目录未找到."; 
+                }else{
+                    List<File> musics = getMusicFiles(path);
+                    int sum = musics.size();
+                    if(sum > 0){
+                        msg = String.format("%s 目录下共 %d 首歌曲", dir, sum);
+                    }else{
+                        msg = String.format("%s 目录下无 mp3 后缀歌曲", dir);
+                    }
                 }
-                
-                getMusicFiles(path);
-            
         }
-        return "sss";
+        return msg;
     }
 
     /**
@@ -357,13 +302,8 @@ public class Mp3Player{
     public static void main(final String[] args) throws IOException{
         EventQueue.invokeLater(() -> {
             final PlayerFrame f = new PlayerFrame();
-            //f.setTitle("MP3播放器");
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 设置关闭事件
             f.setVisible(true); // 显示窗体
         });
-
-        //File f = new File("123.mp3");
-        //AudioPlayer p = new AudioPlayer(f);
-        //p.play();
     }
 }
