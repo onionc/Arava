@@ -172,14 +172,14 @@ class PlayerPanel extends JPanel {
 
         String newMsg = "";
         String commandKey = "", commandValue = "";
-        final String[] t = commandStr.split("\\s+");
+        final String[] commandArr = commandStr.split("\\s+");
         try{
             int i=0;
             // 获取命令字符串，有空值则跳过
-            if(t[i].equals("")){
+            if(commandArr[i].equals("")){
                 i++;
             }
-            commandKey = t[i++]; 
+            commandKey = commandArr[i++]; 
             // 以/开始的是特殊命令
             if(commandKey.charAt(0) == '/'){
                 switch(commandKey){
@@ -194,22 +194,36 @@ class PlayerPanel extends JPanel {
                         System.exit(0);
                         return;
                     case "/move":
-                        final int x = Integer.valueOf(t[i++]);
-                        final int y = Integer.valueOf(t[i++]);
+                        final int x = Integer.valueOf(commandArr[i++]);
+                        final int y = Integer.valueOf(commandArr[i++]);
                         this.pf.setLocation(x,y);
                         newMsg = "窗口位置已重置";
                         break;
                 }
             }else{
-                // 命令值
-                commandValue = t[i];
-                String r = Command.runCommand(commandKey, commandValue);
-                newMsg = commandKey + " " + commandValue + "\n" + r;
+                // 普通命令值
+                String rMsg = "";
+                switch(commandKey){
+                    case "open":
+                        commandValue = commandArr[i];
+                        rMsg = Command.runCommand(commandKey, commandValue);
+                        break;
+                    case "play":
+                    case "pause":
+                    case "next":
+                        rMsg = Command.runCommand(commandKey, "");
+                        break;
+                    default:
+                        break;
+                }
+                
+                
+                newMsg = commandKey + " " + commandValue + "\n" + rMsg;
                 
             }
         }catch(final ArrayIndexOutOfBoundsException e){
             // 命令错误
-            newMsg = "";
+            newMsg = "命令不能解析";
         }
         
         if(newMsg.length()>0){
@@ -240,7 +254,7 @@ class PlayerPanel extends JPanel {
 }
 
 class Command{
-        /**
+    /**
      * 执行普通命令
      * @param key
      * @param value
@@ -265,13 +279,32 @@ class Command{
             case "play":
                 if(MusicFile.getInstance().getCount() > 0){
                     File f = MusicFile.getInstance().getMusic();
-                    (new AudioPlay(f)).play();
+                    
+                    // 使用线程播放歌曲
+                    Runnable r = () -> {
+                     
+                   
+                       
+                        (new AudioPlay(f)).play();
+
+                         
+                
+                  };
+                    MusicFile.getInstance().t = new Thread(r);
+                    MusicFile.getInstance().t.start();
+                    
 
                 }else{
                     msg = "此目录下无歌曲，请先指定目录 [open xxx]";
                 }
                 break;
-
+            case "pause":
+                if(MusicFile.getInstance().t != null){
+                    System.out.println("pause!!!");
+                    MusicFile.getInstance().t.interrupt();
+                    
+                }
+                break;
             default:
                 break;
         }

@@ -11,7 +11,7 @@ public class MusicFile{
     private File dir; // 目录
     private List<File> musics; // 文件
     private Iterator currentMusic;// 当前的音乐文件 = linkedList.iterator();
-
+    Thread t;
     private MusicFile() {}
 
     public static synchronized MusicFile getInstance() {
@@ -74,6 +74,8 @@ public class MusicFile{
             return (File) this.musics.iterator().next();
         }
     }
+
+
 
 
 }

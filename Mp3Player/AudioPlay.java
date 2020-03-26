@@ -62,6 +62,11 @@ class AudioPlay {
                 nBytesRead = din.read(data, 0, data.length);
                 if (nBytesRead != -1)
                     line.write(data, 0, nBytesRead);
+                    if (Thread.currentThread().isInterrupted()) {
+                        System.out.println("Java技术栈线程被中断，程序退出。");
+                    
+                        return;
+                    }
             }
             // Stop
             line.drain();
