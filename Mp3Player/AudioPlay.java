@@ -25,7 +25,7 @@ class AudioPlay {
         this.file = file;
     }
 
-    public void play() {
+    public void play()throws InterruptedException{
         try {
             // 取得文件输入流
             in = AudioSystem.getAudioInputStream(file);
@@ -43,7 +43,11 @@ class AudioPlay {
 
             in.close();
 
-        } catch (final Exception e) {
+        }catch(InterruptedException e){
+            throw e;
+        } 
+        
+        catch (Exception e) {
             System.out.printf("Failed to get sources\n");
         }
     }
@@ -51,7 +55,7 @@ class AudioPlay {
     /**
      * 原始播放
      */
-    private void rawplay(final AudioFormat targetFormat, final AudioInputStream din) throws IOException, LineUnavailableException {
+    private synchronized void  rawplay(final AudioFormat targetFormat, final AudioInputStream din) throws IOException, LineUnavailableException,InterruptedException {
         final byte[] data = new byte[4096];
         final SourceDataLine line = getLine(targetFormat);
         if (line != null) {
@@ -59,14 +63,18 @@ class AudioPlay {
             line.start();
             int nBytesRead = 0;
             while (nBytesRead != -1) {
+                if(MusicFile.getInstance().play==1){
+                System.out.printf(".");
                 nBytesRead = din.read(data, 0, data.length);
                 if (nBytesRead != -1)
                     line.write(data, 0, nBytesRead);
-                    if (Thread.currentThread().isInterrupted()) {
-                        System.out.println("Java技术栈线程被中断，程序退出。");
-                    
-                        return;
+                }else{
+                    // 阻塞暂停
+                    synchronized (MusicFile.getInstance().object) {
+                        MusicFile.getInstance().object.wait();
                     }
+
+                }
             }
             // Stop
             line.drain();
@@ -101,7 +109,7 @@ class AudioPlay {
         // TAudioFileFormat properties
         if (baseFileFormat instanceof TAudioFileFormat) {
             properties = ((TAudioFileFormat) baseFileFormat).properties();
-            System.out.println(properties);
+            //System.out.println(properties);
         }
         return properties;
     }

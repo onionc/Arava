@@ -10,8 +10,11 @@ public class MusicFile{
     private static MusicFile singletonInstance;
     private File dir; // 目录
     private List<File> musics; // 文件
-    private Iterator currentMusic;// 当前的音乐文件 = linkedList.iterator();
-    Thread t;
+    private File currentMusic = null; // 当前的音乐文件
+    private Iterator interator; // 文件迭代器
+    volatile Thread playThread; // 播放线程
+    volatile  int play = 0; // 0 初始,1 播放，2暂停
+    Object object = new Object();
     private MusicFile() {}
 
     public static synchronized MusicFile getInstance() {
@@ -59,21 +62,52 @@ public class MusicFile{
     }
 
     /**
-     * 获取下一首音乐文件，如果第一次或者到末尾则取第一首
+     * 获取当前或者第一首音乐的文件
      * @return
      */
     public File getMusic(){
-        if(this.currentMusic == null){
-            if(this.getCount() <= 0) return null;
-            this.currentMusic = this.musics.iterator();
-        }
-        // 有下一首取下一首，没有的话，取第一首
-        if(this.currentMusic.hasNext()){
-            return (File) this.currentMusic.next();
+        if(this.currentMusic != null){
+
+        }else if(this.interatorValid()){
+            this.currentMusic = this.nextMusic();
         }else{
-            return (File) this.musics.iterator().next();
+            return null;
         }
+        return this.currentMusic;
     }
+
+    /**
+     * 下一首
+     * @return
+     */
+    public File nextMusic(){
+        // 有下一首取下一首，没有的话，取第一首
+        if(!this.interatorValid()){
+            return null;
+        }
+        if(this.interator.hasNext()){
+            this.currentMusic = (File) this.interator.next();
+        }else{
+            this.currentMusic = (File) this.interator.next();
+        }
+        return this.currentMusic;
+
+    }
+
+    /**
+     * 迭代器是否有效
+     * @return boolean
+     */
+    private boolean interatorValid(){
+        if(this.interator == null){
+            if(this.getCount() <= 0){
+                return false;
+            }
+            this.interator = this.musics.iterator();
+        }
+        return true;
+    }
+
 
 
 
