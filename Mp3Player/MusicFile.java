@@ -13,6 +13,7 @@ public class MusicFile{
     private File currentMusic = null; // 当前的音乐文件
     private Iterator interator; // 文件迭代器
     volatile Thread playThread; // 播放线程
+    volatile Thread infoThread;
     volatile  int play = 0; // 0 初始,1 播放，2暂停
     Object object = new Object();
     private MusicFile() {}
@@ -62,7 +63,7 @@ public class MusicFile{
     }
 
     /**
-     * 获取当前或者第一首音乐的文件
+     * 获取当前或者第一首音乐文件
      * @return
      */
     public File getMusic(){
@@ -88,6 +89,7 @@ public class MusicFile{
         if(this.interator.hasNext()){
             this.currentMusic = (File) this.interator.next();
         }else{
+            this.interator = this.musics.iterator();
             this.currentMusic = (File) this.interator.next();
         }
         return this.currentMusic;

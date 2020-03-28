@@ -1,5 +1,6 @@
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 import javax.sound.sampled.AudioInputStream;
@@ -20,15 +21,29 @@ class AudioPlay {
     AudioInputStream in; // 文件流
     AudioFormat audioFormat; // 文件格式
     SourceDataLine sourceDataLine; // 输出设备
+    private static AudioPlay instance;
 
-    public AudioPlay(File file) {
-        this.file = file;
+    private AudioPlay() {}
+    public static synchronized AudioPlay getInstance() {
+        if(instance == null) {
+            instance = new AudioPlay();
+        }
+
+        return instance;
     }
-
-    public void play()throws InterruptedException{
+    
+    public void play() throws InterruptedException{
         try {
+            this.file = MusicFile.getInstance().getMusic();
+            System.out.println("play: this file = " + this.file);
+            if(this.file == null){
+                throw new FileNotFoundException("music file not found.");
+            }else{
+                MusicFile.getInstance().play = 1;
+            }
+
             // 取得文件输入流
-            in = AudioSystem.getAudioInputStream(file);
+            in = AudioSystem.getAudioInputStream(this.file);
             audioFormat = in.getFormat();
             // 转换 mp3 文件编码
             if (audioFormat.getEncoding() != AudioFormat.Encoding.PCM_SIGNED) {
@@ -36,8 +51,6 @@ class AudioPlay {
                         audioFormat.getChannels(), audioFormat.getChannels() * 2, audioFormat.getSampleRate(), false);
                 in = AudioSystem.getAudioInputStream(audioFormat, in);
             }
-
-            getProperties();
             // 播放
             rawplay(audioFormat, in);
 
@@ -45,9 +58,7 @@ class AudioPlay {
 
         }catch(InterruptedException e){
             throw e;
-        } 
-        
-        catch (Exception e) {
+        }catch (Exception e) {
             System.out.printf("Failed to get sources\n");
         }
     }
@@ -55,7 +66,7 @@ class AudioPlay {
     /**
      * 原始播放
      */
-    private synchronized void  rawplay(final AudioFormat targetFormat, final AudioInputStream din) throws IOException, LineUnavailableException,InterruptedException {
+    private void  rawplay(final AudioFormat targetFormat, final AudioInputStream din) throws IOException, LineUnavailableException,InterruptedException {
         final byte[] data = new byte[4096];
         final SourceDataLine line = getLine(targetFormat);
         if (line != null) {
@@ -64,16 +75,21 @@ class AudioPlay {
             int nBytesRead = 0;
             while (nBytesRead != -1) {
                 if(MusicFile.getInstance().play==1){
-                System.out.printf(".");
-                nBytesRead = din.read(data, 0, data.length);
-                if (nBytesRead != -1)
-                    line.write(data, 0, nBytesRead);
-                }else{
+                    System.out.printf(".");
+                    nBytesRead = din.read(data, 0, data.length);
+                    if (nBytesRead != -1)
+                        line.write(data, 0, nBytesRead);
+                }else if(MusicFile.getInstance().play==2){
                     // 阻塞暂停
                     synchronized (MusicFile.getInstance().object) {
                         MusicFile.getInstance().object.wait();
                     }
 
+                }else if(MusicFile.getInstance().play==3){
+                    // play 状态为3，则表示暂停，退出
+                    break;
+                }else{
+                    ;
                 }
             }
             // Stop
@@ -114,11 +130,16 @@ class AudioPlay {
         return properties;
     }
 
-    // private String
+    public String getMusicInfo(){
+        String result = "";
+        try{
+            Map properties = this.getProperties();
+            result += properties.get("title") + "-" + properties.get("author");
+
+        }catch(Exception e){
+            ;
+        }
+
+        return result;
+    }
 }
-
-
-
-//File f = new File("123.mp3");
-//AudioPlayer p = new AudioPlayer(f);
-//p.play();

@@ -1,49 +1,26 @@
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import javax.swing.text.DefaultCaret;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.SourceDataLine;
-import javax.sound.sampled.UnsupportedAudioFileException;
-
-import org.tritonus.share.sampled.file.TAudioFileFormat;
-
-import javax.sound.sampled.AudioFileFormat;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.DataLine;
-import javax.sound.sampled.LineUnavailableException;
+import java.util.Timer;
+import java.util.TimerTask;
 import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.MatteBorder;
 import javax.swing.KeyStroke;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingConstants;
 
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.BorderLayout;
-import java.awt.Rectangle;
 
 class PlayerFrame extends JFrame {
 
@@ -62,7 +39,8 @@ class PlayerPanel extends JPanel {
     // 显示框
     JTextArea showBox;
     String showHelpMsg = "[/h] 帮助\n[/q] 退出\n[/move x y] 移动窗口位置到x,y\n[/c] 清屏\n[open xxx] 打开歌曲目录xxx\n[play id] 播放编号为id的歌曲";
-    String showMsg = showHelpMsg;
+    String showMsg = showHelpMsg; // 显示信息
+    String musicInfoMsg = "";
     // 命令框
     JTextField commandField;
 
@@ -88,7 +66,7 @@ class PlayerPanel extends JPanel {
         showBox.setFont(new Font(Font.SERIF, Font.BOLD, 15));
         MatteBorder noBorder = new MatteBorder(0, 0, 0, 0, Color.BLACK);
         showBox.setBorder(noBorder);
-//        System.out.println(showBox.getWrapStyleWord());
+
         showBox.setFocusable(false); // 不获取焦点
         
         // add(showBox);
@@ -120,6 +98,40 @@ class PlayerPanel extends JPanel {
         // 右箭头，下一曲
         imap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "command.right");
         commandField.getActionMap().put("command.right", new KeyboardAction("next", js));
+
+        // 歌词监听
+        // 使用线程播放歌曲
+        Runnable r = () -> {
+            try{
+                // 如果状态为3, 表示暂停。播放结束之后重新开始play()
+                // while(true){
+                //    
+                //    System.out.println("-");
+                // }
+
+                Timer timer = new Timer();
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        musicInfoMsg = musicInfoPaint();
+                        repaint();
+                    }
+                    
+                }, 100, 100);
+
+               
+
+            }catch(Exception e){
+              
+                System.out.println("play thread error");
+                MusicFile.getInstance().playThread = null;
+                MusicFile.getInstance().play = 0;
+            }finally{
+                System.out.println("thread finally");
+            }
+        };
+        MusicFile.getInstance().infoThread = new Thread(r);
+        MusicFile.getInstance().infoThread.start();
 
     }
 
@@ -154,7 +166,12 @@ class PlayerPanel extends JPanel {
                     parseCommand(commandStr);
                     repaint();
                     break;
-
+                case "next":
+                    commandField.setText("");
+                    // 执行命令
+                    parseCommand("next");
+                    repaint();
+                    break;
                 default:
                     break;
             }
@@ -245,9 +262,18 @@ class PlayerPanel extends JPanel {
         //final Graphics2D g2 = (Graphics2D) g;
         // 位置重置
         
-        // 显示框刷新
-        showBox.setText(showMsg);
+        // 显示框刷新, 加上歌曲信息
+        String shwoAllMsg = showMsg + "\n" + musicInfoMsg;
+        showBox.setText(shwoAllMsg);
 
+    }
+
+
+    public String musicInfoPaint(){
+        if(MusicFile.getInstance().play == 1){
+            return AudioPlay.getInstance().getMusicInfo();
+        }
+        return "";
     }
     
 }
@@ -271,53 +297,64 @@ class Command{
                     int count = MusicFile.getInstance().getMusicFiles(path);
                     if(count > 0){
                         msg = String.format("%s 目录下共 %d 首歌曲", dir, count);
+
                     }else{
                         msg = String.format("%s 目录下无 mp3 后缀歌曲", dir);
                     }
                 }
                 break;
             case "play":
-                // 播放中无操作
-                
                 if(MusicFile.getInstance().play==1){
+                    // 播放中无操作
                     break;
                 }else if(MusicFile.getInstance().play==2){
-                    // 播放
+                    // 暂停中的，继续播放
                     synchronized (MusicFile.getInstance().object) {
                         MusicFile.getInstance().object.notify();
                         MusicFile.getInstance().play=1;
                     }
                   
-                }else
-                if(MusicFile.getInstance().getCount() > 0){
-                    File f = MusicFile.getInstance().getMusic();
-                    MusicFile.getInstance().play = 1;
-                    // 使用线程播放歌曲
-                    Runnable r = () -> {
-                     try{
-                        (new AudioPlay(f)).play();
-                     }catch(Exception e){
-                        System.out.println("play thread error");
-                        MusicFile.getInstance().playThread = null;
-                        MusicFile.getInstance().play = 0;
-                     }finally{
-                         System.out.println("thread finally");
-                         
-                     }
-                
-                  };
-                    MusicFile.getInstance().playThread = new Thread(r);
-                    MusicFile.getInstance().playThread.start();
                 }else{
-                    msg = "此目录下无歌曲，请先指定目录 [open xxx]";
+                    // MusicFile.getInstance().play = 3 or 0 
+                    if(MusicFile.getInstance().getCount() > 0){
+                        // 查看是否有播放中的
+                        if(MusicFile.getInstance().playThread != null){
+                            //break;
+                        }
+                        // 使用线程播放歌曲
+                        Runnable r = () -> {
+                            try{
+                                // 如果状态为3, 表示暂停。播放结束之后重新开始play()
+                                do{
+                                    MusicFile.getInstance().play = 1;
+                                    AudioPlay.getInstance().play();
+                                }while(MusicFile.getInstance().play == 3);
+                            }catch(Exception e){
+                                System.out.println(e);
+                                System.out.println("play thread error");
+                                MusicFile.getInstance().playThread = null;
+                                MusicFile.getInstance().play = 0;
+                            }finally{
+                                System.out.println("thread finally");
+                            }
+                        };
+                        MusicFile.getInstance().playThread = new Thread(r);
+                        MusicFile.getInstance().playThread.start();
+                       
+                        msg = "播放歌曲中";
+                    }else{
+                        msg = "此目录下无歌曲，请先指定目录 [open xxx]";
+                    }
                 }
                 break;
             case "pause":
                 MusicFile.getInstance().play = 2;
-
                 break;
             case "next":
-
+                // 下一首步骤：播放（避免暂停中），状态改变，当前歌曲更新
+                runCommand("play", "");
+                MusicFile.getInstance().play = 3;
+                MusicFile.getInstance().nextMusic();
             default:
                 break;
         }
