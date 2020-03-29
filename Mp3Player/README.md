@@ -9,7 +9,7 @@
 
 
 
- ![1585497394618](F:\java\Arava\Mp3Player\assets\1585497394618.png)
+ ![1585497394618](http://image.acfuu.com/mdImages/202003/1585497394618.png)
 
 
 
@@ -21,4 +21,3 @@
 -   play 播放
 -   pause/→ 暂停
 -   next 下一首
-

@@ -145,6 +145,8 @@ class AudioPlay {
                 (String) properties.get("author"),
                 (long) properties.get("duration")
             );
+
+            MusicFile.getInstance().progressBar = ""; // 重置进度条
         }catch(Exception e){
             ;
         }
