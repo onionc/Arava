@@ -7,6 +7,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.xml.crypto.Data;
 
 import org.tritonus.share.sampled.file.TAudioFileFormat;
 
@@ -39,7 +40,8 @@ class AudioPlay {
             if(this.file == null){
                 throw new FileNotFoundException("music file not found.");
             }else{
-                MusicFile.getInstance().play = 1;
+                // 获取文件信息
+                getMusicInfo();
             }
 
             // 取得文件输入流
@@ -69,12 +71,15 @@ class AudioPlay {
     private void  rawplay(final AudioFormat targetFormat, final AudioInputStream din) throws IOException, LineUnavailableException,InterruptedException {
         final byte[] data = new byte[4096];
         final SourceDataLine line = getLine(targetFormat);
+        System.out.println(data.length);
+        System.out.println(data);
         if (line != null) {
             // Start
             line.start();
             int nBytesRead = 0;
             while (nBytesRead != -1) {
                 if(MusicFile.getInstance().play==1){
+                    // 正常播放逻辑
                     System.out.printf(".");
                     nBytesRead = din.read(data, 0, data.length);
                     if (nBytesRead != -1)
@@ -117,29 +122,31 @@ class AudioPlay {
     /**
      * 获取属性
      */
-    private Map getProperties() throws UnsupportedAudioFileException, IOException {
+    private Map<?,?> getProperties() throws UnsupportedAudioFileException, IOException {
         AudioFileFormat baseFileFormat = null;
         baseFileFormat = AudioSystem.getAudioFileFormat(file);
 
-        Map properties = null;
+        Map<?,?> properties = null;
         // TAudioFileFormat properties
         if (baseFileFormat instanceof TAudioFileFormat) {
             properties = ((TAudioFileFormat) baseFileFormat).properties();
-            //System.out.println(properties);
         }
         return properties;
     }
 
-    public String getMusicInfo(){
-        String result = "";
+    /**
+     * 获取音乐文件信息
+     */
+    public void getMusicInfo(){
         try{
-            Map properties = this.getProperties();
-            result += properties.get("title") + "-" + properties.get("author");
-
+            Map<?,?> properties = this.getProperties();
+            MusicFile.getInstance().setMusicInfo(
+                (String) properties.get("title"), 
+                (String) properties.get("author"),
+                (long) properties.get("duration")
+            );
         }catch(Exception e){
             ;
         }
-
-        return result;
     }
 }

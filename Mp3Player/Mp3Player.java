@@ -103,31 +103,25 @@ class PlayerPanel extends JPanel {
         // 使用线程播放歌曲
         Runnable r = () -> {
             try{
-                // 如果状态为3, 表示暂停。播放结束之后重新开始play()
-                // while(true){
-                //    
-                //    System.out.println("-");
-                // }
-
                 Timer timer = new Timer();
                 timer.schedule(new TimerTask() {
                     @Override
                     public void run() {
-                        musicInfoMsg = musicInfoPaint();
+                        //static int a = 0;
+                        //a+=100;
+                        if(MusicFile.getInstance().play == 1){
+                            
+                            MusicFile.getInstance().currentMusic.progressTimerCount++;
+                            MusicFile.getInstance().generateProgressBar();
+                        }
                         repaint();
                     }
                     
                 }, 100, 100);
-
-               
-
             }catch(Exception e){
-              
-                System.out.println("play thread error");
-                MusicFile.getInstance().playThread = null;
-                MusicFile.getInstance().play = 0;
+                System.out.println("progress bar thread error");
             }finally{
-                System.out.println("thread finally");
+                System.out.println("progress bar thread finally");
             }
         };
         MusicFile.getInstance().infoThread = new Thread(r);
@@ -263,17 +257,14 @@ class PlayerPanel extends JPanel {
         // 位置重置
         
         // 显示框刷新, 加上歌曲信息
-        String shwoAllMsg = showMsg + "\n" + musicInfoMsg;
+        String shwoAllMsg = String.format(
+            "%s\n%s%s",
+            showMsg, 
+            MusicFile.getInstance().currentMusic,
+            MusicFile.getInstance().progressBar
+        );
         showBox.setText(shwoAllMsg);
 
-    }
-
-
-    public String musicInfoPaint(){
-        if(MusicFile.getInstance().play == 1){
-            return AudioPlay.getInstance().getMusicInfo();
-        }
-        return "";
     }
     
 }
@@ -286,7 +277,7 @@ class Command{
      */
     public static String runCommand(String key, String value){
         String msg = "";
-        System.out.println("start:" + key + "--"+MusicFile.getInstance().play + " " + MusicFile.getInstance().playThread);
+        //System.out.println("start:" + key + "--"+MusicFile.getInstance().play + " " + MusicFile.getInstance().playThread);
         switch(key){
             case "open":
                 File path = new File(value);
@@ -335,7 +326,7 @@ class Command{
                                 MusicFile.getInstance().playThread = null;
                                 MusicFile.getInstance().play = 0;
                             }finally{
-                                System.out.println("thread finally");
+                                MusicFile.getInstance().play = 0;
                             }
                         };
                         MusicFile.getInstance().playThread = new Thread(r);
@@ -359,7 +350,7 @@ class Command{
                 break;
         }
         
-        System.out.println("end:" + MusicFile.getInstance().playThread);
+        //System.out.println("end:" + MusicFile.getInstance().playThread);
 
         return msg;
     }

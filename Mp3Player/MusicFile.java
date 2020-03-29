@@ -3,6 +3,26 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+class FileStruct{
+    File file;
+    String name;
+    String author;
+    int durationSeconds; // 时长
+    String durationFormat; // 时长格式化
+    int progressTimerCount = 1;
+
+    @Override
+    public String toString(){
+        if(this.file==null){
+            return "";
+        }
+        String s = String.format(
+            "♪ %s - %s, %s\n",
+            this.name, this.author, this.durationFormat
+        );
+        return s;
+    }
+}
 /**
  * 存储音乐文件信息
  */
@@ -10,12 +30,15 @@ public class MusicFile{
     private static MusicFile singletonInstance;
     private File dir; // 目录
     private List<File> musics; // 文件
-    private File currentMusic = null; // 当前的音乐文件
-    private Iterator interator; // 文件迭代器
+    public FileStruct currentMusic = new FileStruct(); // 当前的音乐文件
+    private Iterator<?> interator; // 文件迭代器
     volatile Thread playThread; // 播放线程
     volatile Thread infoThread;
     volatile  int play = 0; // 0 初始,1 播放，2暂停
-    Object object = new Object();
+    Object object = new Object(); // 阻塞使用
+
+    public String progressBar = ""; // 进度条
+    
     private MusicFile() {}
 
     public static synchronized MusicFile getInstance() {
@@ -67,14 +90,14 @@ public class MusicFile{
      * @return
      */
     public File getMusic(){
-        if(this.currentMusic != null){
+        if(this.currentMusic.file != null){
 
         }else if(this.interatorValid()){
-            this.currentMusic = this.nextMusic();
+            this.currentMusic.file = this.nextMusic();
         }else{
             return null;
         }
-        return this.currentMusic;
+        return this.currentMusic.file;
     }
 
     /**
@@ -87,12 +110,12 @@ public class MusicFile{
             return null;
         }
         if(this.interator.hasNext()){
-            this.currentMusic = (File) this.interator.next();
+            this.currentMusic.file = (File) this.interator.next();
         }else{
             this.interator = this.musics.iterator();
-            this.currentMusic = (File) this.interator.next();
+            this.currentMusic.file = (File) this.interator.next();
         }
-        return this.currentMusic;
+        return this.currentMusic.file;
 
     }
 
@@ -110,8 +133,48 @@ public class MusicFile{
         return true;
     }
 
+    
+    /**
+     * 设置音乐名、作者和时长
+     * @param name
+     * @param author
+     * @param duration
+     */
+    public void setMusicInfo(String name, String author, long duration){
+        this.currentMusic.name = name;
+        this.currentMusic.author = author;
+        this.currentMusic.durationSeconds = (int) duration/1000/1000;
+        this.currentMusic.durationFormat = getDuration(this.currentMusic.durationSeconds);
+        // System.out.println(this.currentMusic);
+    }
 
+    
+    /**
+     * 获取格式化的时长
+     * @param ds
+     * @return
+     */
+    private String getDuration(int ds){
+        int h = (int) ds/3600;
+        int m = (int) (ds % 3600) / 60;
+        int s = ds % 60;
+        return String.format("%02d:%02d:%02d", h,m,s);
+    }
 
+    /**
+     * 生成进度条
+     */
+    public void generateProgressBar(){
+        int msec = this.currentMusic.durationSeconds*1000;
+        int LENGTH = 30;
+        int per = (int) msec/LENGTH; // 每个符号多少毫秒
 
+        int xCount = (this.currentMusic.progressTimerCount*100 / per);
+        int nCount = LENGTH - xCount;
+        String a1 = new String(new char[xCount]).replace("\0", "*");
+        String a2 = new String(new char[nCount]).replace("\0", "-");
+       
+        this.progressBar = a1+a2+"\n";
+    }
 
 }
