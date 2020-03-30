@@ -17,10 +17,13 @@
 
 **3月**
 
-- 2020.3.17~3.21 [取色器](https://github.com/onionc/Arava/tree/master/TakeColor)
+- 2020.3.17~3.21 [取色器](https://github.com/onionc/Arava/tree/master/TakeColor) 
+
+ ![TakeColor](http://image.acfuu.com/mdImages/Arava/Arava_TakeColor.png)
+
 - 2020.3.23~3.30 [Mp3播放器](https://github.com/onionc/Arava/tree/master/Mp3Player)
 
-
+ ![Mp3Player](http://image.acfuu.com/mdImages/Arava/Arava_Mp3Player.png)
 
 
 
