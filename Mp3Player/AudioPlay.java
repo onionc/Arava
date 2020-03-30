@@ -7,7 +7,6 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import javax.xml.crypto.Data;
 
 import org.tritonus.share.sampled.file.TAudioFileFormat;
 
@@ -36,9 +35,9 @@ class AudioPlay {
     public void play() throws InterruptedException{
         try {
             this.file = MusicFile.getInstance().getMusic();
-            System.out.println("play: this file = " + this.file);
+
             if(this.file == null){
-                throw new FileNotFoundException("music file not found.");
+                throw new FileNotFoundException("music file not found: " + this.file.toString());
             }else{
                 // 获取文件信息
                 getMusicInfo();
@@ -63,6 +62,14 @@ class AudioPlay {
         }catch (Exception e) {
             System.out.printf("Failed to get sources\n");
         }
+
+
+        // !=3表示是正常播放结束，切换下一首
+        if(MusicFile.getInstance().play!=3){
+            MusicFile.getInstance().nextMusic();
+            MusicFile.getInstance().play = 3;
+        }
+        
     }
 
     /**
@@ -71,8 +78,7 @@ class AudioPlay {
     private void  rawplay(final AudioFormat targetFormat, final AudioInputStream din) throws IOException, LineUnavailableException,InterruptedException {
         final byte[] data = new byte[4096];
         final SourceDataLine line = getLine(targetFormat);
-        System.out.println(data.length);
-        System.out.println(data);
+
         if (line != null) {
             // Start
             line.start();
@@ -80,7 +86,6 @@ class AudioPlay {
             while (nBytesRead != -1) {
                 if(MusicFile.getInstance().play==1){
                     // 正常播放逻辑
-                    System.out.printf(".");
                     nBytesRead = din.read(data, 0, data.length);
                     if (nBytesRead != -1)
                         line.write(data, 0, nBytesRead);
@@ -91,7 +96,7 @@ class AudioPlay {
                     }
 
                 }else if(MusicFile.getInstance().play==3){
-                    // play 状态为3，则表示暂停，退出
+                    // play 状态为3，则表示下一首，退出
                     break;
                 }else{
                     ;
@@ -146,7 +151,11 @@ class AudioPlay {
                 (long) properties.get("duration")
             );
 
-            MusicFile.getInstance().progressBar = ""; // 重置进度条
+            // 重置进度条
+            MusicFile.getInstance().progressBar = "";
+            MusicFile.getInstance().currentMusic.progressTimerCount = 0;
+            
+            
         }catch(Exception e){
             ;
         }
