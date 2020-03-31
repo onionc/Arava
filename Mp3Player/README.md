@@ -38,7 +38,7 @@ javac  -encoding utf-8  -cp "./lib/jl1.0.1.jar;./lib/tritonus_share.jar;./lib/mp
 
 #### 遇到问题（未解决）
 
-在 vscode 中可以编译运行，但是在命令行(cmd / powershell)中编译后会读取音频错误，错误信息如下：
+在 vscode 中可以编译运行，但是在命令行(cmd / powershell)中编译后会出现读取音频错误，错误信息如下：
 
 ```
 javax.sound.sampled.UnsupportedAudioFileException: File of unsupported format
