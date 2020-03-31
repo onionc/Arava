@@ -115,8 +115,6 @@ class PlayerPanel extends JPanel {
                 }, 1000, 1000);
             }catch(Exception e){
                 System.out.println("progress bar thread error");
-            }finally{
-                System.out.println("progress bar thread finally");
             }
         };
         MusicFile.getInstance().barThread = new Thread(r);
@@ -233,7 +231,6 @@ class PlayerPanel extends JPanel {
         
         if(newMsg.length()>0){
             showMsg = showBox.getText() + "\n" + newMsg;
-            //showBox.append(newMsg);
         }
 
         return;
@@ -301,7 +298,6 @@ class Command{
                     if(MusicFile.getInstance().getCount() > 0){
                         // 使用线程播放歌曲
                         if(MusicFile.getInstance().playThread == null){
-                            System.out.println("play thread null");
 
                             Runnable r = () -> {
                                 try{
@@ -321,8 +317,8 @@ class Command{
                             };
                             MusicFile.getInstance().playThread = new Thread(r);
                             MusicFile.getInstance().playThread.start();
+                            msg = "播放歌曲中";
                         }
-                        msg = "播放歌曲中";
                     }else{
                         msg = "此目录下无歌曲，请先指定目录 [open xxx]";
                     }

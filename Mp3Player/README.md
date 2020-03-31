@@ -8,7 +8,7 @@
 
 
 
-略过过程：看一下播放中画面：
+#### 播放中的画面
 
  ![1585497394618](http://image.acfuu.com/mdImages/202003/1585497394618.png)
 
@@ -24,5 +24,38 @@
 
 
 
+#### 使用
+
+如果使用vscode，直接打开目录，编译即可。
+
+命令行编译：
+
+```
+javac  -encoding utf-8  -cp "./lib/jl1.0.1.jar;./lib/tritonus_share.jar;./lib/mp3spi1.9.5.jar" Mp3Player.java AudioPlay.java MusicFile.java
+```
 
 
+
+#### 遇到问题（未解决）
+
+在 vscode 中可以编译运行，但是在命令行(cmd / powershell)中编译后会读取音频错误，错误信息如下：
+
+```
+javax.sound.sampled.UnsupportedAudioFileException: File of unsupported format
+        at java.desktop/javax.sound.sampled.AudioSystem.getAudioInputStream(AudioSystem.java:1066)
+        at AudioPlay.play(AudioPlay.java:46)
+```
+
+AudioPlay.java:46 的代码是：`in = AudioSystem.getAudioInputStream(this.file);`
+
+库中报错代码：
+
+ ![1585622285760](C:\chad\java\Arava\Mp3Player\README.assets\1585622285760.png)
+
+
+
+1. 想把报错的类复制过来，发现如果使用 `import com.sun.media.sound.JDK13Services;` ，是属于模块未导出的包
+
+   ` (程序包 com.sun.media.sound 已在模块 java.desktop 中声明, 但该模块未导出它)` 
+
+2. 得考虑其他方法。以后再解决

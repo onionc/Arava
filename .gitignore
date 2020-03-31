@@ -6,5 +6,5 @@ bin/
 # vscode & typora
 \.vscode/
 *.assets/
-
+*.class
 

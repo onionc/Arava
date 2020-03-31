@@ -35,9 +35,9 @@ class AudioPlay {
     public void play() throws InterruptedException{
         try {
             this.file = MusicFile.getInstance().getMusic();
-
+            System.out.println(this.file);
             if(this.file == null){
-                throw new FileNotFoundException("music file not found: " + this.file.toString());
+                throw new FileNotFoundException("music file not found");
             }else{
                 // 获取文件信息
                 getMusicInfo();
@@ -57,19 +57,17 @@ class AudioPlay {
 
             in.close();
 
+            // !=3表示是正常播放结束，切换下一首
+            if(MusicFile.getInstance().play!=3){
+                MusicFile.getInstance().nextMusic();
+                MusicFile.getInstance().play = 3;
+            }
         }catch(InterruptedException e){
             throw e;
         }catch (Exception e) {
+            e.printStackTrace();
             System.out.printf("Failed to get sources\n");
         }
-
-
-        // !=3表示是正常播放结束，切换下一首
-        if(MusicFile.getInstance().play!=3){
-            MusicFile.getInstance().nextMusic();
-            MusicFile.getInstance().play = 3;
-        }
-        
     }
 
     /**
