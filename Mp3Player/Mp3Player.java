@@ -108,11 +108,11 @@ class PlayerPanel extends JPanel {
                     public void run() {
                         if(MusicFile.getInstance().play == 1){
                             MusicFile.getInstance().generateProgressBar();
-                            MusicFile.getInstance().currentMusic.progressTimerCount++;
+                            MusicFile.getInstance().currentMusic.progressTimerCount+=MusicFile.getInstance().perTask;
                         }
                         repaint();
                     }
-                }, 1000, 1000);
+                }, MusicFile.getInstance().perTask, MusicFile.getInstance().perTask);
             }catch(Exception e){
                 System.out.println("progress bar thread error");
             }
@@ -248,10 +248,12 @@ class PlayerPanel extends JPanel {
         
         // 显示框刷新, 加上歌曲信息
         String shwoAllMsg = String.format(
-            "%s\n%s%s",
+            "%s\n%s%s\n%s",
             showMsg, 
             MusicFile.getInstance().currentMusic,
-            MusicFile.getInstance().progressBar
+            MusicFile.getInstance().progressBar,
+            MusicFile.getInstance().currentLrc.lyric
+
         );
         showBox.setText(shwoAllMsg);
 
@@ -341,8 +343,6 @@ class Command{
         }
         return msg;
     }
-
-
 }
 
 public class Mp3Player{

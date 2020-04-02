@@ -152,6 +152,7 @@ class AudioPlay {
             // 重置进度条
             MusicFile.getInstance().progressBar = "";
             MusicFile.getInstance().currentMusic.progressTimerCount = 0;
+            MusicFile.getInstance().currentLrc = new LrcStruct();
             
             
         }catch(Exception e){

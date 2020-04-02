@@ -24,6 +24,12 @@
 
 
 
+#### 更新
+
+2020/4/2 增加歌词显示
+
+ ![1585840874644](http://image.acfuu.com/mdImages/202004/1585840874644.png)
+
 #### 使用
 
 如果使用vscode，直接打开目录，编译即可。
@@ -47,10 +53,6 @@ javax.sound.sampled.UnsupportedAudioFileException: File of unsupported format
 ```
 
 AudioPlay.java:46 的代码是：`in = AudioSystem.getAudioInputStream(this.file);`
-
-库中报错代码：
-
- ![1585622285760](C:\chad\java\Arava\Mp3Player\README.assets\1585622285760.png)
 
 
 
