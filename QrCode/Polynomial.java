@@ -76,25 +76,25 @@ public class Polynomial {
     /**
      * 添加一项
      */
-    public void addItem(int coef, int expn){
+    public Polynomial addItem(int coef, int expn){
         // 过滤系数为0的项
-        if(coef == 0){
-            return;
+        if(coef != 0){
+            this.addNode(new Node(coef, expn));
+            sort();
         }
-        this.add(new Node(coef, expn));
-        sort();
+        return this;
     }
 
      /**
      * 添加一项
      */
-    public void addItem(Node item){
+    public Polynomial addItem(Node item){
         // 过滤系数为0的项
-        if(item.coef == 0){
-            return;
+        if(item.coef != 0){
+            this.addNode(item);
+            sort();
         }
-        this.add(item);
-        sort();
+        return this;
     }
 
     /**
@@ -105,19 +105,20 @@ public class Polynomial {
     }
 
     /**
-     * 加上多项式中的一项
-     * @param pn2
+     * 加法操作：加上多项式中的一项
+     * @param n2 一项（一个节点）
      * @return
      */
-    private void add(Node n2){
+    private void addNode(Node n2){
 
         Iterator<Node> p1 = this.poly.iterator();
+        Node p1_node;
+        int index, sum;
         while(p1.hasNext()){
-            Node p1_node = p1.next();
-            int index = this.poly.indexOf(p1_node);
-            if(this.compareInt(p1_node.expn, n2.expn) == 0){
-                
-                int sum = p1_node.coef + n2.coef;
+            p1_node = p1.next();
+            index = this.poly.indexOf(p1_node);
+            if(this.compareInt(p1_node.expn, n2.expn) == 0 && index>-1){ // p1_node.expn == n2.expn
+                sum = p1_node.coef + n2.coef;
                 if(sum!=0){
                     this.poly.set(index, new Node(sum, p1_node.expn));
                 }
@@ -142,19 +143,54 @@ public class Polynomial {
         // 复制原 poly
         Polynomial pn_result = new Polynomial();
         for(Node a : this.poly){
-            pn_result.add(a);
+            pn_result.addNode(a);
         }
 
         // 新增的多项式，每一项加上去即可
         Iterator<Node> p2 = pn2.poly.iterator();
         while(p2.hasNext()){
             Node t = p2.next();
-            pn_result.add(t);
+            pn_result.addNode(t);
         }
         pn_result.sort();
         return pn_result;
     }
 
+    /**
+     * 乘法操作：多项式乘以一项
+     * @param pn2
+     * @return
+     */
+    public Polynomial mul(Polynomial pn2){
+
+        Iterator<Node> p1 = this.poly.iterator();
+        Iterator<Node> p2 = pn2.poly.iterator();
+        Node p1_node, p2_node;
+        int index, coef, expn;
+
+        Polynomial pn3 = new Polynomial();
+
+      
+        while(p1.hasNext()){
+            p1_node = p1.next();
+            while(p2.hasNext()){
+                p2_node = p2.next();
+                index = this.poly.indexOf(p1_node);
+                { // p1_node * p2_node
+                    coef = p1_node.coef * p2_node.coef;
+                    expn = p1_node.expn + p2_node.expn;
+                    //if(index>-1)
+                    //    pn3.poly.set(index, new Node(coef, expn));
+                    //else{
+                        pn3.poly.add(new Node(coef, expn));
+                    //}
+                }
+            }
+            
+            
+        }
+        return pn3;
+    }
     
     /**
      * 比较
@@ -170,8 +206,6 @@ public class Polynomial {
         }else{
             return -1;
         }
-
-        
     }
 
 
@@ -186,24 +220,35 @@ public class Polynomial {
 
     // 测试多项式加法
     public static void main(String[] args){
+        /* // 加法操作
         Polynomial a = new Polynomial();
-        a.addItem(-1,2);
-        a.addItem(3,2);
-        a.addItem(0,1);
-        a.addItem(90,3);
+        a.addItem(-1,2).addItem(3,2).addItem(0,1).addItem(90,3);
         a.addItem(10,2);
         a.addItem(7,0);
         System.out.println(a); // +90x^{3}+12x^{2}+7
 
         Polynomial b = new Polynomial();
-        b.addItem(0,3);       
-        b.addItem(3,2);
-        b.addItem(5,1);
-        b.addItem(3,-3);
+        b.addItem(0,3).addItem(3,2).addItem(5,1).addItem(3,-3);
         System.out.println(b); // +3x^{2}+5x+3x^{-3}
 
         Polynomial c = a.add(b);
         System.out.println(c); // +90x^{3}+15x^{2}+5x+7+3x^{-3}
+        */
+
+        //乘法操作
+        Polynomial a = new Polynomial();
+        a.addItem(-1,2).addItem(3,2).addItem(0,1).addItem(90,3);
+        a.addItem(10,2);
+        a.addItem(7,0);
+        System.out.println(a); // +90x^{3}+12x^{2}+7
+
+        Polynomial b = new Polynomial();
+        b.addItem(2,0);
+        System.out.println(b);
+
+        System.out.println(a.mul(b));
+
+        
 
     }
 
