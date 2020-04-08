@@ -1,10 +1,8 @@
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 
 /**
  * 一元多项式
@@ -43,7 +41,6 @@ class Node{
     }
 
     public String toString(){
-        //return String.format("%+d%s^%d", coef, x, expn);
         String formatStr = "";
         // 指数为1或者0时，特殊显示
         if(expn == 1){
@@ -110,7 +107,6 @@ public class Polynomial {
      * @return
      */
     private void addNode(Node n2){
-
         Iterator<Node> p1 = this.poly.iterator();
         Node p1_node;
         int index, sum;
@@ -157,7 +153,7 @@ public class Polynomial {
     }
 
     /**
-     * 乘法操作：多项式乘以一项
+     * 多项式相乘.
      * @param pn2
      * @return
      */
@@ -169,7 +165,6 @@ public class Polynomial {
         int index, coef, expn;
 
         Polynomial pn3 = new Polynomial();
-
       
         while(p1.hasNext()){
             p1_node = p1.next();
@@ -179,17 +174,21 @@ public class Polynomial {
                 { // p1_node * p2_node
                     coef = p1_node.coef * p2_node.coef;
                     expn = p1_node.expn + p2_node.expn;
-                    //if(index>-1)
-                    //    pn3.poly.set(index, new Node(coef, expn));
-                    //else{
-                        pn3.poly.add(new Node(coef, expn));
-                    //}
+                    pn3.poly.add(new Node(coef, expn));
                 }
+                
             }
-            
-            
+            p2 = pn2.poly.iterator(); // 重置p2迭代
         }
-        return pn3;
+
+        return pn3.simplify(); // 化简返回
+    }
+
+    /**
+     * 化简多项式
+     */
+    public Polynomial simplify(){
+        return this.add(new Polynomial());
     }
     
     /**
@@ -220,7 +219,6 @@ public class Polynomial {
 
     // 测试多项式加法
     public static void main(String[] args){
-        /* // 加法操作
         Polynomial a = new Polynomial();
         a.addItem(-1,2).addItem(3,2).addItem(0,1).addItem(90,3);
         a.addItem(10,2);
@@ -231,31 +229,22 @@ public class Polynomial {
         b.addItem(0,3).addItem(3,2).addItem(5,1).addItem(3,-3);
         System.out.println(b); // +3x^{2}+5x+3x^{-3}
 
+        // 加法操作
         Polynomial c = a.add(b);
         System.out.println(c); // +90x^{3}+15x^{2}+5x+7+3x^{-3}
-        */
+        
 
         //乘法操作
-        Polynomial a = new Polynomial();
-        a.addItem(-1,2).addItem(3,2).addItem(0,1).addItem(90,3);
-        a.addItem(10,2);
-        a.addItem(7,0);
-        System.out.println(a); // +90x^{3}+12x^{2}+7
+        Polynomial d = a.mul(b);
+        System.out.println(d); // +270x^{5}+450x^{4}+270+36x^{4}+60x^{3}+36x^{-1}+21x^{2}+35x+21x^{-3}
 
-        Polynomial b = new Polynomial();
-        b.addItem(2,0);
-        System.out.println(b);
-
-        System.out.println(a.mul(b));
-
-        
 
     }
 
 }
 
 /**
- * 排序多项式
+ * 多项式排序
  */
 class PolynomialComparator implements Comparator<Node>{
     @Override
