@@ -185,6 +185,38 @@ public class Polynomial {
     }
 
     /**
+     * 除法
+     * @param divisor
+     */
+    public void div(Polynomial divisor){
+        this.simplify();
+        divisor.simplify();
+
+        // 商
+        Polynomial quotient = new Polynomial();
+        Polynomial remainder = new Polynomial();
+
+        // 获取最大项，找到商
+        Node n1 = this.maxExpnItem();
+        Node n2 = divisor.maxExpnItem();
+        System.out.println(n1);
+        System.out.println(n2);
+
+    }
+
+    /**
+     * 获取多项式中的最大项
+     */
+    private Node maxExpnItem(){
+        iter = this.poly.iterator();
+        if(iter.hasNext()){
+            return iter.next();
+        }else{
+            return null;
+        }
+    }
+
+    /**
      * 化简多项式
      */
     public Polynomial simplify(){
@@ -230,14 +262,18 @@ public class Polynomial {
         System.out.println(b); // +3x^{2}+5x+3x^{-3}
 
         // 加法操作
-        Polynomial c = a.add(b);
-        System.out.println(c); // +90x^{3}+15x^{2}+5x+7+3x^{-3}
+        // Polynomial c = a.add(b);
+        // System.out.println(c); // +90x^{3}+15x^{2}+5x+7+3x^{-3}
         
 
         //乘法操作
-        Polynomial d = a.mul(b);
-        System.out.println(d); // +270x^{5}+450x^{4}+270+36x^{4}+60x^{3}+36x^{-1}+21x^{2}+35x+21x^{-3}
+        // Polynomial d = a.mul(b);
+        // System.out.println(d); // +270x^{5}+450x^{4}+270+36x^{4}+60x^{3}+36x^{-1}+21x^{2}+35x+21x^{-3}
 
+        // 除法操作
+        Polynomial e = new Polynomial();
+        e.addItem(2,2);
+        a.div(e);
 
     }
 
