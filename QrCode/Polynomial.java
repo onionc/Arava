@@ -192,11 +192,11 @@ public class Polynomial {
         this.simplify();
         divisor.simplify();
 
-        // 商
+        // 商 和 余数
         Polynomial quotient = new Polynomial();
         Polynomial remainder = new Polynomial();
 
-        // 获取最大项，找到商
+        // 获取最大项，找到商. n1 被除数，n2 除数
         Node n1 = this.maxExpnItem();
         Node n2 = divisor.maxExpnItem();
         System.out.println(n1);
