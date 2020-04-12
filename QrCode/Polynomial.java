@@ -13,14 +13,14 @@ import java.util.List;
  * 每一项（每个节点）的数据
  * @param args
  */
-class Node<T extends Comparable>{
-    public T coef; // 系数
-    public T expn; // 指数
+class Node{
+    public double coef; // 系数
+    public double expn; // 指数
     private final static char x = 'x'; // 未知数的表示符号
     private enum FORMAT {NORMAL, LATEX}; // 打印格式
     private FORMAT f = FORMAT.LATEX; // 默认的打印格式
     
-    public Node(T coef, T expn){
+    public Node(double coef, double expn){
         this.coef = coef;
         this.expn = expn;
     }
@@ -43,40 +43,45 @@ class Node<T extends Comparable>{
     public String toString(){
         String formatStr = "";
         // 指数为1或者0时，特殊显示
-        if(expn.compareTo(1) == 0){
-            formatStr = "%1$+d%3$s";
-        }else if(expn.compareTo(0) == 0){
-            formatStr = "%1$+d";
+        if(Node.compareDouble(expn, 1)){
+            formatStr = "%1$+f%3$s";
+        }else if(Node.compareDouble(expn, 0)){
+            formatStr = "%1$+f";
         }else{
+
             switch(this.f){
                 case NORMAL:
-                    formatStr = "%1$+d%3$s^%2$d";
+                    formatStr = "%1$+f%3$s^%2$s";
                     break;
                 case LATEX:
-                    formatStr = "%1$+d%3$s^{%2$d}";
+                    formatStr = "%1$+f%3$s^{%2$s}";
                     break;
             }
             
         }
         return String.format(formatStr, coef, expn, x);
     }
+
+    public static boolean compareDouble(double v1, double v2){
+        return (Math.abs(v1-v2) < 1e-6);
+    }
 }
-public class Polynomial<T extends Comparable> {
-    private List<Node<T>> poly;
-    private Iterator<Node<T>> iter; // 每次使用请重置，只为了增加变量而不是存储当前位置
+public class Polynomial {
+    private List<Node> poly;
+    private Iterator<Node> iter; // 每次使用请重置，只为了增加变量而不是存储当前位置
 
     public Polynomial(){
-        this.poly = new LinkedList<Node<T>>();
+        this.poly = new LinkedList<Node>();
     }
 
 
     /**
      * 添加一项
      */
-    public <T extends Comparable>Polynomial<T> addItem(T coef, T expn){
+    public Polynomial addItem(double coef, double expn){
         // 过滤系数为0的项
-        if(coef.compareTo(0) == 0){
-            this.addNode(new Node<T>(coef, expn));
+        if(!Node.compareDouble(coef, 0)){
+            this.addNode(new Node(coef, expn));
             sort();
         }
         return this;
@@ -85,7 +90,7 @@ public class Polynomial<T extends Comparable> {
      /**
      * 添加一项
      */
-    public Polynomial<T> addItem(Node<T> item){
+    public Polynomial addItem(Node item){
         // 过滤系数为0的项
         if(item.coef != 0){
             this.addNode(item);
@@ -106,17 +111,18 @@ public class Polynomial<T extends Comparable> {
      * @param n2 一项（一个节点）
      * @return
      */
-    private void addNode(Node<T> n2){
-        Iterator<Node<T>> p1 = this.poly.iterator();
-        Node<T> p1_node;
-        int index, sum;
+    private void addNode(Node n2){
+        Iterator<Node> p1 = this.poly.iterator();
+        Node p1_node;
+        int index;
+        double sum;
         while(p1.hasNext()){
             p1_node = p1.next();
             index = this.poly.indexOf(p1_node);
-            if(this.compareInt(p1_node.expn, n2.expn) == 0 && index>-1){ // p1_node.expn == n2.expn
+            if(Node.compareDouble(p1_node.expn, n2.expn) && index>-1){ // p1_node.expn == n2.expn
                 sum = p1_node.coef + n2.coef;
                 if(sum!=0){
-                    this.poly.set(index, new Node<T>(sum, p1_node.expn));
+                    this.poly.set(index, new Node(sum, p1_node.expn));
                 }
                 n2 = null;
                 break;
@@ -135,17 +141,17 @@ public class Polynomial<T extends Comparable> {
      * @param pn2
      * @return
      */
-    public Polynomial<T> add(Polynomial<T> pn2){
+    public Polynomial add(Polynomial pn2){
         // 复制原 poly
-        Polynomial<T> pn_result = new Polynomial<T>();
-        for(Node<T> a : this.poly){
+        Polynomial pn_result = new Polynomial();
+        for(Node a : this.poly){
             pn_result.addNode(a);
         }
 
         // 新增的多项式，每一项加上去即可
-        Iterator<Node<T>> p2 = pn2.poly.iterator();
+        Iterator<Node> p2 = pn2.poly.iterator();
         while(p2.hasNext()){
-            Node<T> t = p2.next();
+            Node t = p2.next();
             pn_result.addNode(t);
         }
         pn_result.sort();
@@ -157,14 +163,15 @@ public class Polynomial<T extends Comparable> {
      * @param pn2
      * @return
      */
-    public Polynomial<T> mul(Polynomial<T> pn2){
+    public Polynomial mul(Polynomial pn2){
 
-        Iterator<Node<T>> p1 = this.poly.iterator();
-        Iterator<Node<T>> p2 = pn2.poly.iterator();
-        Node<T> p1_node, p2_node;
-        int index, coef, expn;
+        Iterator<Node> p1 = this.poly.iterator();
+        Iterator<Node> p2 = pn2.poly.iterator();
+        Node p1_node, p2_node;
+        int index;
+        double coef, expn;
 
-        Polynomial<T> pn3 = new Polynomial<T>();
+        Polynomial pn3 = new Polynomial();
       
         while(p1.hasNext()){
             p1_node = p1.next();
@@ -174,7 +181,7 @@ public class Polynomial<T extends Comparable> {
                 { // p1_node * p2_node
                     coef = p1_node.coef * p2_node.coef;
                     expn = p1_node.expn + p2_node.expn;
-                    pn3.poly.add(new Node<T>(coef, expn));
+                    pn3.poly.add(new Node(coef, expn));
                 }
                 
             }
@@ -195,17 +202,17 @@ public class Polynomial<T extends Comparable> {
      * 除法
      * @param divisor
      */
-    public void div(Polynomial<T> divisor, Polynomial<T> quotient, Polynomial<T> remainder){
+    public void div(Polynomial divisor, Polynomial quotient, Polynomial remainder){
         this.simplify();
         divisor.simplify();
 
         // 商 和 余数
-        quotient = new Polynomial<T>();
-        remainder = new Polynomial<T>();
+        quotient = new Polynomial();
+        remainder = new Polynomial();
 
         // 获取最大项，找到商. n1 被除数，n2 除数
-        Node<T> n1 = this.maxExpnItem();
-        Node<T> n2 = divisor.maxExpnItem();
+        Node n1 = this.maxExpnItem();
+        Node n2 = divisor.maxExpnItem();
         System.out.println(n1);
         System.out.println(n2);
 
@@ -234,7 +241,7 @@ public class Polynomial<T extends Comparable> {
     /**
      * 获取多项式中的最大项
      */
-    private Node<T> maxExpnItem(){
+    private Node maxExpnItem(){
         iter = this.poly.iterator();
         if(iter.hasNext()){
             return iter.next();
@@ -246,26 +253,9 @@ public class Polynomial<T extends Comparable> {
     /**
      * 化简多项式
      */
-    public Polynomial<T> simplify(){
-        return this.add(new Polynomial<T>());
+    public Polynomial simplify(){
+        return this.add(new Polynomial());
     }
-    
-    /**
-     * 比较
-     * @param v1
-     * @param v2
-     * @return
-     */
-    private int compareInt(T v1, T v2){
-        if(v1.compareTo(v2) > 0){
-            return 1;
-        }else if(v1 == v2){
-            return 0;
-        }else{
-            return -1;
-        }
-    }
-
 
     public String toString(){
         this.iter = this.poly.iterator();
@@ -278,13 +268,13 @@ public class Polynomial<T extends Comparable> {
 
     // 测试多项式加法
     public static void main(String[] args){
-        Polynomial<Double > a = new Polynomial<Double>();
+        Polynomial a = new Polynomial();
         a.addItem(-1,2).addItem(3,2).addItem(0,1).addItem(90,3);
         a.addItem(10,2);
         a.addItem(7,0);
         System.out.println(a); // +90x^{3}+12x^{2}+7
 
-        Polynomial<Integer> b = new Polynomial<Integer>();
+        Polynomial b = new Polynomial();
         b.addItem(0,3).addItem(3,2).addItem(5,1).addItem(3,-3);
         System.out.println(b); // +3x^{2}+5x+3x^{-3}
 
@@ -299,7 +289,7 @@ public class Polynomial<T extends Comparable> {
 
     
 
-        Polynomial<Double> e = new Polynomial<Double>();
+        Polynomial e = new Polynomial();
         e.addItem(2,2);
         a.div(e,null,null);
 
@@ -309,10 +299,16 @@ public class Polynomial<T extends Comparable> {
     /**
      * 多项式排序
      */
-    class PolynomialComparator implements Comparator<Node<T>>{
+    class PolynomialComparator implements Comparator<Node>{
         @Override
-        public int compare(Node<T> n1, Node<T> n2){
-            return (n2.expn - n1.expn);
+        public int compare(Node n1, Node n2){
+            if(n2.expn - n1.expn > 1e-6){
+                return 0;
+            }else if(n2.expn < n1.expn){
+                return -1;
+            }else{
+                return 1;
+            }
         }
     }
 
