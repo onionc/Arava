@@ -17,48 +17,31 @@ class Node{
     public double coef; // 系数
     public double expn; // 指数
     private final static char x = 'x'; // 未知数的表示符号
-    private enum FORMAT {NORMAL, LATEX}; // 打印格式
-    private FORMAT f = FORMAT.LATEX; // 默认的打印格式
     
     public Node(double coef, double expn){
         this.coef = coef;
         this.expn = expn;
     }
-    
-    /**
-     * 设置输出格式
-     * @param fi 1:普通格式 (+90x^3-1x^-2+5x^1)，2 latex (+90x^{3}-1x^{-2}+5x^{1})
-     */
-    public void setFormat(int fi){
-        switch(fi){
-            case 1:
-                this.f = FORMAT.NORMAL; 
-                break;
-            case 2:
-                this.f = FORMAT.LATEX;
-                break;
-        }
-    }
 
     public String toString(){
         String formatStr = "";
-        // 指数为1或者0时，特殊显示
-        if(Node.compareDouble(expn, 1)){
-            formatStr = "%1$+f%3$s";
-        }else if(Node.compareDouble(expn, 0)){
-            formatStr = "%1$+f";
-        }else{
-
-            switch(this.f){
-                case NORMAL:
-                    formatStr = "%1$+f%3$s^%2$s";
-                    break;
-                case LATEX:
-                    formatStr = "%1$+f%3$s^{%2$s}";
-                    break;
-            }
-            
+        // 系数为1（系数为0的情况在addItem时已过滤）、指数为1或者0时，特殊显示
+        if(!Node.compareDouble(coef, 1)){
+            formatStr += "%1$+f";
         }
+
+        if(!Node.compareDouble(expn, 0)){
+            if(formatStr == ""){
+                formatStr = "+";
+            }
+            formatStr += "%3$s";
+            if(!Node.compareDouble(expn, 1)){
+                formatStr += "^{%2$s}";
+            }
+        }else if(formatStr==""){
+            formatStr += "%1$+f";
+        }
+        
         return String.format(formatStr, coef, expn, x);
     }
 
@@ -72,6 +55,11 @@ public class Polynomial {
 
     public Polynomial(){
         this.poly = new LinkedList<Node>();
+    }
+
+    public Polynomial(Node n1){
+        this.poly = new LinkedList<Node>();
+        this.addItem(n1);
     }
 
 
@@ -121,9 +109,10 @@ public class Polynomial {
             index = this.poly.indexOf(p1_node);
             if(Node.compareDouble(p1_node.expn, n2.expn) && index>-1){ // p1_node.expn == n2.expn
                 sum = p1_node.coef + n2.coef;
-                if(sum!=0){
+                if(Node.compareDouble(sum, 0))
+                    this.poly.remove(index);
+                else
                     this.poly.set(index, new Node(sum, p1_node.expn));
-                }
                 n2 = null;
                 break;
             }
@@ -137,16 +126,26 @@ public class Polynomial {
     }
 
     /**
+     * 复制多项式
+     * @param pn
+     * @return
+     */
+    private Polynomial copy(){
+        Polynomial pn_result = new Polynomial();
+        for(Node a : this.poly){
+            pn_result.addNode(a);
+        }
+        return pn_result;
+    }
+
+    /**
      * 两个多项式相加（加上一个多项式）
      * @param pn2
      * @return
      */
     public Polynomial add(Polynomial pn2){
         // 复制原 poly
-        Polynomial pn_result = new Polynomial();
-        for(Node a : this.poly){
-            pn_result.addNode(a);
-        }
+        Polynomial pn_result = this.copy();
 
         // 新增的多项式，每一项加上去即可
         Iterator<Node> p2 = pn2.poly.iterator();
@@ -156,6 +155,27 @@ public class Polynomial {
         }
         pn_result.sort();
         return pn_result;
+    }
+
+    /**
+     * 取相反数
+     */
+    private void opposite(){
+        for(Node n : this.poly){
+            n.coef *= -1;
+        }
+    }
+
+    /**
+     * 两个多项式想减
+     * @param pn
+     * @return
+     */
+    public Polynomial sub(Polynomial pn){
+        // 取相反数
+        pn.opposite();
+        System.out.println(pn);
+        return this.add(pn);
     }
 
     /**
@@ -198,6 +218,15 @@ public class Polynomial {
     private int len(){
         return this.poly.size();
     }
+
+    private static Node divItem(Node n1, Node n2){
+        if(n1.expn < n2.expn){
+            return null;
+        }else{
+            return new Node(n1.coef/n2.coef, n1.expn-n2.expn);
+        }
+    }
+
     /**
      * 除法
      * @param divisor
@@ -206,35 +235,38 @@ public class Polynomial {
         this.simplify();
         divisor.simplify();
 
-        // 商 和 余数
-        quotient = new Polynomial();
-        remainder = new Polynomial();
 
-        // 获取最大项，找到商. n1 被除数，n2 除数
+        //  n1 被除数，n2 除数 的最高项
         Node n1 = this.maxExpnItem();
         Node n2 = divisor.maxExpnItem();
-        System.out.println(n1);
-        System.out.println(n2);
+        // System.out.println(n1);
+        // System.out.println(n2);
+        // 获取最大项，找到商.
+        Node quotientNode; // 临时商
+        quotientNode = divItem(n1, n2);
+        if(quotientNode==null){
+            remainder.poly = this.copy().poly;
+            return;
+        }
+        System.out.println(quotientNode);
+
+        // 结果1
+        Polynomial r1 = divisor.mul(new Polynomial(quotientNode));
+        System.out.println(r1);
+
+        // 计算差
+        //System.out.println(this);
+        System.out.println(r1);
 
 
-     
-            // int i,j,mm,ll;
-            // int m = this.len();
-            // int n = divisor.len();
-            // int k = 
-            // ll=m-1;
-            // for(i=k;i>0;i--){
-            //  R[i-1]=A[ll]/B[n-1];
-            //  mm=ll;
-            //  for(j=1;j<=n-1;j++){
-            //  A[mm-1]-=R[i-1]*B[n-j-1];
-            //  mm-=1;
-            //  }
-            //  ll-=1;
-            // }
-            // for(i=0;i<l;i++){
-            //  L[i]=A[i];
-            // }
+        Polynomial r2 = this.sub(r1);
+        System.out.println(r2);
+        
+        quotient.addItem(quotientNode);
+
+        r2.div(divisor, quotient, remainder);
+
+           
             
     }
 
@@ -268,30 +300,41 @@ public class Polynomial {
 
     // 测试多项式加法
     public static void main(String[] args){
-        Polynomial a = new Polynomial();
-        a.addItem(-1,2).addItem(3,2).addItem(0,1).addItem(90,3);
-        a.addItem(10,2);
-        a.addItem(7,0);
-        System.out.println(a); // +90x^{3}+12x^{2}+7
+        // Polynomial a = new Polynomial();
+        // a.addItem(-1,2).addItem(3,2).addItem(0,1).addItem(90,3);
+        // a.addItem(10,2);
+        // a.addItem(7,0);
+        // System.out.println(a); // +90x^{3}+12x^{2}+7
 
-        Polynomial b = new Polynomial();
-        b.addItem(0,3).addItem(3,2).addItem(5,1).addItem(3,-3);
-        System.out.println(b); // +3x^{2}+5x+3x^{-3}
+        // Polynomial b = new Polynomial();
+        // b.addItem(0,3).addItem(3,2).addItem(5,1).addItem(3,-3);
+        // System.out.println(b); // +3x^{2}+5x+3x^{-3}
 
         // 加法操作
         // Polynomial c = a.add(b);
         // System.out.println(c); // +90x^{3}+15x^{2}+5x+7+3x^{-3}
-        
+
 
         //乘法操作
         // Polynomial d = a.mul(b);
         // System.out.println(d); // +270x^{5}+450x^{4}+270+36x^{4}+60x^{3}+36x^{-1}+21x^{2}+35x+21x^{-3}
 
-    
+        Polynomial d1 = new Polynomial().addItem(1,3).addItem(5,2).addItem(6,1).addItem(3,0);
+        Polynomial e = new Polynomial(new Node(1,1)).addItem(1,0);
+        // Polynomial d1 = new Polynomial().addItem(1,2).addItem(-3,0);
+        // Polynomial e = new Polynomial(new Node(2,1)).addItem(-4,0);
+        // 商 和 余数
 
-        Polynomial e = new Polynomial();
-        e.addItem(2,2);
-        a.div(e,null,null);
+        Polynomial quotient = new Polynomial();
+        Polynomial remainder = new Polynomial();
+            
+        d1.div(e, quotient, remainder);
+        System.out.println(d1);
+        
+        System.out.println(e);
+        System.out.println(quotient);
+        System.out.println(remainder + "/(" + e + ")");
+
 
     }
 
