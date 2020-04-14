@@ -27,7 +27,9 @@ class Node{
         String formatStr = "";
         // 系数为1（系数为0的情况在addItem时已过滤）、指数为1或者0时，特殊显示
         if(!Node.compareDouble(coef, 1)){
-            formatStr += "%1$+f";
+            if(coef > 0)
+                formatStr += "+";
+            formatStr += "%1$s";
         }
 
         if(!Node.compareDouble(expn, 0)){
@@ -39,7 +41,9 @@ class Node{
                 formatStr += "^{%2$s}";
             }
         }else if(formatStr==""){
-            formatStr += "%1$+f";
+            if(coef > 0)
+                formatStr += "+";
+            formatStr += "%1$s";
         }
         
         return String.format(formatStr, coef, expn, x);
@@ -51,7 +55,7 @@ class Node{
 }
 public class Polynomial {
     private List<Node> poly;
-    private Iterator<Node> iter; // 每次使用请重置，只为了增加变量而不是存储当前位置
+    private Iterator<Node> iter; // 每次使用请重置
 
     public Polynomial(){
         this.poly = new LinkedList<Node>();
