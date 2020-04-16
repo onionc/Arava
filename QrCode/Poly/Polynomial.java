@@ -15,12 +15,12 @@ import java.util.List;
  * 每一项（每个节点）的数据
  * @param args
  */
-class Node{
-    public double coef; // 系数
-    public double expn; // 指数
+class Node<T extends Number>{
+    public T coef; // 系数
+    public T expn; // 指数
     private final static char x = 'x'; // 未知数的表示符号
     
-    public Node(double coef, double expn){
+    public Node(T coef, T expn){
         this.coef = coef;
         this.expn = expn;
     }
@@ -28,22 +28,22 @@ class Node{
     public String toString(){
         String formatStr = "";
         // 系数为1（系数为0的情况在addItem时已过滤）、指数为1或者0时，特殊显示
-        if(!Node.compareDouble(coef, 1)){
-            if(coef > 0)
+        if(!Node.compareT(coef, 1)){
+            if(coef.doubleValue() > 0)
                 formatStr += "+";
             formatStr += "%1$s";
         }
 
-        if(!Node.compareDouble(expn, 0)){
+        if(!Node.compareT(expn, 0)){
             if(formatStr == ""){
                 formatStr = "+";
             }
             formatStr += "%3$s";
-            if(!Node.compareDouble(expn, 1)){
+            if(!Node.compareT(expn, 1)){
                 formatStr += "^{%2$s}";
             }
         }else if(formatStr==""){
-            if(coef > 0)
+            if(coef.doubleValue() > 0)
                 formatStr += "+";
             formatStr += "%1$s";
         }
@@ -51,20 +51,20 @@ class Node{
         return String.format(formatStr, coef, expn, x);
     }
 
-    public static boolean compareDouble(double v1, double v2){
-        return (Math.abs(v1-v2) < 1e-6);
+    public static <T extends Number> boolean compareT(T v1, T v2){
+        return (Math.abs(v1.doubleValue()-v2.doubleValue()) < 1e-6);
     }
 }
-public class Polynomial {
-    private List<Node> poly;
-    private Iterator<Node> iter; // 每次使用请重置
+public class Polynomial<T extends Number>{
+    private List<Node<T>> poly;
+    private Iterator<Node<T>> iter; // 每次使用请重置
 
     public Polynomial(){
-        this.poly = new LinkedList<Node>();
+        this.poly = new LinkedList<Node<T>>();
     }
 
-    public Polynomial(Node n1){
-        this.poly = new LinkedList<Node>();
+    public Polynomial(Node<T> n1){
+        this.poly = new LinkedList<Node<T>>();
         this.addItem(n1);
     }
 
@@ -72,10 +72,10 @@ public class Polynomial {
     /**
      * 添加一项
      */
-    public Polynomial addItem(double coef, double expn){
+    public Polynomial<T> addItem(T coef, T expn){
         // 过滤系数为0的项
-        if(!Node.compareDouble(coef, 0)){
-            this.addNode(new Node(coef, expn));
+        if(!Node.compareT(coef, 0)){
+            this.addNode(new Node<T>(coef, expn));
             sort();
         }
         return this;
@@ -84,9 +84,9 @@ public class Polynomial {
      /**
      * 添加一项
      */
-    public Polynomial addItem(Node item){
+    public Polynomial<T> addItem(Node<T> item){
         // 过滤系数为0的项
-        if(item.coef != 0){
+        if(!Node.compareT(item.coef, 0)){ // item.coef != 0
             this.addNode(item);
             sort();
         }
@@ -105,17 +105,17 @@ public class Polynomial {
      * @param n2 一项（一个节点）
      * @return
      */
-    private void addNode(Node n2){
-        Iterator<Node> p1 = this.poly.iterator();
-        Node p1_node;
+    private void addNode(Node<T> n2){
+        Iterator<Node<T>> p1 = this.poly.iterator();
+        Node<T> p1_node;
         int index;
         double sum;
         while(p1.hasNext()){
             p1_node = p1.next();
             index = this.poly.indexOf(p1_node);
-            if(Node.compareDouble(p1_node.expn, n2.expn) && index>-1){ // p1_node.expn == n2.expn
-                sum = p1_node.coef + n2.coef;
-                if(Node.compareDouble(sum, 0))
+            if(Node.compareT(p1_node.expn, n2.expn) && index>-1){ // p1_node.expn == n2.expn
+                sum = p1_node.coef.doubleValue() + n2.coef.doubleValue();
+                if(Node.compareT(sum, 0))
                     this.poly.remove(index);
                 else
                     this.poly.set(index, new Node(sum, p1_node.expn));
@@ -168,7 +168,7 @@ public class Polynomial {
      */
     private void opposite(){
         for(Node n : this.poly){
-            n.coef *= -1;
+            n.coef = n.coef.doubleValue() * -1;
         }
     }
 
@@ -189,15 +189,15 @@ public class Polynomial {
      * @param pn2
      * @return
      */
-    public Polynomial mul(Polynomial pn2){
+    public Polynomial<T> mul(Polynomial<T> pn2){
 
-        Iterator<Node> p1 = this.poly.iterator();
-        Iterator<Node> p2 = pn2.poly.iterator();
-        Node p1_node, p2_node;
+        Iterator<Node<T>> p1 = this.poly.iterator();
+        Iterator<Node<T>> p2 = pn2.poly.iterator();
+        Node<T> p1_node, p2_node;
         int index;
         double coef, expn;
 
-        Polynomial pn3 = new Polynomial();
+        Polynomial<T> pn3 = new Polynomial<T>();
       
         while(p1.hasNext()){
             p1_node = p1.next();
@@ -205,8 +205,9 @@ public class Polynomial {
                 p2_node = p2.next();
                 index = this.poly.indexOf(p1_node);
                 { // p1_node * p2_node
-                    coef = p1_node.coef * p2_node.coef;
-                    expn = p1_node.expn + p2_node.expn;
+                    coef = p1_node.coef.doubleValue() * p2_node.coef.doubleValue();
+                    expn = p1_node.expn.doubleValue() + p2_node.expn.doubleValue();
+ 
                     pn3.poly.add(new Node(coef, expn));
                 }
                 
@@ -225,11 +226,11 @@ public class Polynomial {
         return this.poly.size();
     }
 
-    private static Node divItem(Node n1, Node n2){
-        if(n1.expn < n2.expn){
+    private Node divItem(Node<T> n1, Node<T> n2){
+        if(n1.expn.doubleValue() < n2.expn.doubleValue()){
             return null;
         }else{
-            return new Node(n1.coef/n2.coef, n1.expn-n2.expn);
+            return new Node(n1.coef.doubleValue()/n2.coef.doubleValue(), n1.expn.doubleValue()-n2.expn.doubleValue());
         }
     }
 
@@ -348,12 +349,12 @@ public class Polynomial {
     /**
      * 多项式排序
      */
-    class PolynomialComparator implements Comparator<Node>{
+    class PolynomialComparator implements Comparator<Node<T>>{
         @Override
-        public int compare(Node n1, Node n2){
-            if(n2.expn - n1.expn > 1e-6){
+        public int compare(Node<T> n1, Node<T> n2){
+            if(Node.compareT(n2.expn, n1.expn)){ 
                 return 0;
-            }else if(n2.expn < n1.expn){
+            }else if(n2.expn.doubleValue() < n1.expn.doubleValue()){
                 return -1;
             }else{
                 return 1;
