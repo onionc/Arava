@@ -3,34 +3,24 @@
 因为纠错算法中需要使用多项式进行运算，需要处理多项式的四则运算。
 纠错编码的多项式长除法，使用两种多项式，一个是消息多项式 (message polynomial)，另一个是生成多项式 (generator polynomial)。消息多项式将被一个生成器多项式除；生成多项式是通过相乘得到的多项式 $(x - α^0) ... (x - α^{n-1})$ 。
 
-### 伽罗瓦域 GF(256) 介绍
+### 1. 伽罗瓦域 GF(256) 介绍
 
 
 
-### 日志和反日志
+### 2. 日志和反日志
 
- 因此，在GF(256)中执行乘法只需要生成2的所有乘方。 以及相应的逆对数。
+ 因此，在GF(256)中执行乘法只需要生成2的所有乘方， 以及相应的逆对数。
 
 >  一个数的逆对数（antilogarithm），是指一个正数的对数即等于已知数。也就是说，在b=logaN对数运算中（以a为底的对数），逆对数是已知对数b去寻求相应的[真数](https://baike.baidu.com/item/真数/20402544)N。 
 
 ```java
 import java.util.Arrays;
 
-
-public class xxx{
-    public static void main(String[] args){
-
-        // 2的幂
-        int powers[] = Test.powersOf2ForGF();
-        System.out.println(Arrays.toString(powers));
-        // 生成逆对数
-        int antiLog[] = Test.antiLog(powers);
-        System.out.println(Arrays.toString(antiLog));
-    }
-}
-
-class Test{
-    /**
+/**
+ * 幂和逆对数
+ */
+public class Power {
+        /**
      * 生成2的n次方,GF(256) 范围内的幂
      */
     public static int[] powersOf2ForGF(){
@@ -69,6 +59,14 @@ class Test{
         return antiLog;
     }
 
+    public static void main(String[] args){
+        // 2 的幂
+        int powers[] = Power.powersOf2ForGF();
+        System.out.println(Arrays.toString(powers));
+        // 生成逆对数
+        int antiLog[] = Power.antiLog(powers);
+        System.out.println(Arrays.toString(antiLog));
+    }
 }
 ```
 
@@ -79,7 +77,7 @@ class Test{
 
 
 
-### 消息多项式
+### 3. 消息多项式
 
 消息多项式使用来自数据编码步骤的数据码字作为其系数。例如，如果转换为整数的数据码字是25、218和35，则消息多项式将是$25x^2 + 218x + 35$
 
@@ -91,12 +89,10 @@ public class ErrorCorrectionCoding{
     public static void main(String[] args){
         // 消息多项式
         int[] code = {2, 25, 218, 35};
-        Polynomial mP = new Test().messagePolynomial(code);
-        System.out.println(mP); // +2x^{3}+25x^{2}+218x+35
+        Polynomial mP = new ErrorCorrectionCoding().messagePolynomial(code);
+        System.out.println(mP); // 2x^{3}+25x^{2}+218x+35
     }
-}
 
-class Test{
 
     /**
      * 生成 消息多项式
@@ -116,10 +112,11 @@ class Test{
 
 使用数字码 `2, 25, 218, 35` 生成消息多项式为 $2x^{3}+25x^{2}+218x+35$。
 
-### 生成多项式
+### 4. 生成多项式
 
 生成多项式是通过相乘得到的多项式： $(x - α^0) ... (x - α^{n-1})$ 。
 
 这里将展示如何计算2个错误修正码的生成器多项式，因为它演示了计算所有剩余生成器多项式的过程：
 
 **2个错误纠正码的发生器多项式**
+

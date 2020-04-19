@@ -10,7 +10,6 @@ import java.util.List;
  * 一元多项式
  */
 
-
 /**
  * 每一项（每个节点）的数据
  * @param args
