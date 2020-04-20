@@ -42,7 +42,7 @@ class Node{
         }else if(formatStr==""){
             formatStr += "%1$+d";
         }
-       // System.out.println(formatStr);
+
         return String.format(formatStr, coef, expn, x);
     }
 }
@@ -229,14 +229,18 @@ public class PolynomialGF{
         }
     }
 
+
+
     /**
      * 除法
-     * @param divisor
+     * this 当前的多项式是 被除数
+     * @param divisor 除数
+     * @param quotient 商
+     * @param remainder 余数
      */
     public void div(PolynomialGF divisor, PolynomialGF quotient, PolynomialGF remainder){
         this.simplify();
         divisor.simplify();
-
 
         //  n1 被除数，n2 除数 的最高项
         Node n1 = this.maxExpnItem();
@@ -337,7 +341,9 @@ public class PolynomialGF{
         PolynomialGF d = a.mul(b);
         System.out.println(d); // +270x^{5}+486x^{4}+60x^{3}+21x^{2}+35x+270+36x^{-1}+21x^{-3}
         
-        // 除法操作
+        
+        /*
+        // 除法操作 在GF(256) 下有问题
         PolynomialGF d1 = new PolynomialGF().addItem(1,3).addItem(5,2).addItem(6,1).addItem(3,0);
         PolynomialGF e = new PolynomialGF(new Node(1,1)).addItem(1,0);
 
@@ -350,6 +356,7 @@ public class PolynomialGF{
         System.out.println(e); // x+1
         System.out.println(String.format("%s ... (%s) ", quotient, remainder)); // +x^{2}+4x+2 ... (+1)
         System.out.println(String.format("%s + [(%s) / (%s)]", quotient, remainder, e)); // +x^{2}+4x+2 + [(+1) / (+x+1)]
+        */
     }
 }
 

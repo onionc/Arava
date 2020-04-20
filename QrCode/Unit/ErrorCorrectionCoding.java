@@ -12,9 +12,12 @@ public class ErrorCorrectionCoding{
         Polynomial mP = new ErrorCorrectionCoding().messagePolynomial(code);
         System.out.println(mP);
         */
+        PolynomialGF p;
         // 两个错误纠正码的生成器多项式
-        new ErrorCorrectionCoding().generatorPolynomial(2);
-        new ErrorCorrectionCoding().generatorPolynomial(3);
+        p = new ErrorCorrectionCoding().generatorPolynomial(2); // +x^{2}+3x+2
+        // p=new ErrorCorrectionCoding().generatorPolynomial(3); // +x^{3}+7x^{2}+14x+8
+        // p = new ErrorCorrectionCoding().generatorPolynomial(10); // 
+        System.out.println(p);
     }
 
     /**
@@ -35,7 +38,8 @@ public class ErrorCorrectionCoding{
 
 
     /**
-     * 两个错误纠正码的生成器多项式 (x - α^0) ... (x - α^{n-1})
+     * 两个错误纠正码的生成器多项式 (x - α^0) ... (x - α^{n-1}) 
+     * 递归实现，上一版本是普通实现
      * @param ECC_Number 纠错码字数(number of error correction codewords)
      * @return
      */
@@ -43,20 +47,21 @@ public class ErrorCorrectionCoding{
         if(ECC_Number<1){
             return null;
         }
-
-        PolynomialGF ps = new PolynomialGF();
+        PolynomialGF t = new PolynomialGF();
+        
         // i=0
-        ps.addItem(1, 1).addItem(1,0);
-        System.out.println(ps);
-        
-        for(int i=1; i<ECC_Number; i++){
-            PolynomialGF t = new PolynomialGF().addItem(1,1).addItem(1<<i,0);
-            System.out.println(t);
-        
-            ps = ps.mul(t);
+        if(ECC_Number==1){
+            t.addItem(1, 1).addItem(1,0);
+            System.out.println(t + "\tx^" + 0);
+
+            return t;
+        }else{
+            PolynomialGF t2 = new PolynomialGF().addItem(1,1).addItem(1<<(ECC_Number-1),0);
+            System.out.println(t2 + "\tx^" + (ECC_Number-1));
+
+            return t2.mul(generatorPolynomial(ECC_Number-1));
         }
-        System.out.println(ps);
-        return ps;
+        
     }
 
 
