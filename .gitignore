@@ -8,3 +8,5 @@ bin/
 *assets/
 *.class
 
+# log
+*.log

@@ -10,42 +10,7 @@ import java.util.List;
  * 一元多项式, GF(256)
  */
 
-/**
- * 每一项（每个节点）的数据
- * @param args
- */
-class Node{
-    public int coef; // 系数
-    public int expn; // 指数
-    private final static char x = 'x'; // 未知数的表示符号
-    
-    public Node(int coef, int expn){
-        this.coef = coef;
-        this.expn = expn;
-    }
 
-    public String toString(){
-        String formatStr = "";
-        // 系数为1（系数为0的情况在addItem时已过滤）、指数为1或者0时，特殊显示
-        if(coef!=1){ 
-            formatStr += "%1$+d";
-        }
-
-        if(expn!=0){
-            if(formatStr == ""){
-                formatStr = "+";
-            }
-            formatStr += "%3$s";
-            if(expn!=1){
-                formatStr += "^{%2$s}";
-            }
-        }else if(formatStr==""){
-            formatStr += "%1$+d";
-        }
-
-        return String.format(formatStr, coef, expn, x);
-    }
-}
 public class PolynomialGF{
     private List<Node> poly;
     private Iterator<Node> iter; // 每次使用请重置
@@ -63,12 +28,10 @@ public class PolynomialGF{
     /**
      * 添加一项
      */
-    public PolynomialGF addItem(int coef, int expn){
-        // 过滤系数为0的项
-        if(coef!=0){
-            this.addNode(new Node(coef, expn));
-            sort();
-        }
+    public PolynomialGF addItem(int alpha_expn, int expn){
+        this.addNode(new Node(alpha_expn, expn));
+        sort();
+        
         return this;
     }
 
@@ -77,7 +40,7 @@ public class PolynomialGF{
      */
     public PolynomialGF addItem(Node item){
         // 过滤系数为0的项
-        if(item.coef!=0){
+        if(item.coef.value != 0){
             this.addNode(item);
             sort();
         }
@@ -97,7 +60,11 @@ public class PolynomialGF{
      * @return
      */
     private void addNode(Node n2){
-        Node n2Copy = new Node(n2.coef, n2.expn);
+        if(n2.expn<0 || n2.coef.alpha_expn<0){
+            Log.getLogger().warning("addNode: must>=0");
+            return;
+        }
+        Node n2Copy = new Node(n2.coef.alpha_expn, n2.expn);
         Iterator<Node> p1 = this.poly.iterator();
         Node p1_node;
         int index;
@@ -106,7 +73,7 @@ public class PolynomialGF{
             p1_node = p1.next();
             index = this.poly.indexOf(p1_node);
             if( p1_node.expn == n2.expn && index>-1){
-                sum = p1_node.coef ^ n2.coef;
+                sum = Node.addCoef(p1_node.coef, n2.coef);
                 if(sum == 0)
                     this.poly.remove(index);
                 else
@@ -119,7 +86,6 @@ public class PolynomialGF{
         if(n2Copy != null){
             this.poly.add(n2Copy);
         }
-
         return ;
     }
 
@@ -131,9 +97,7 @@ public class PolynomialGF{
     private PolynomialGF copy(){
         PolynomialGF pn_result = new PolynomialGF();
         for(Node a : this.poly){
-           
             pn_result.addNode(a);
-
         }
         return pn_result;
     }
@@ -158,28 +122,6 @@ public class PolynomialGF{
     }
 
     /**
-     * 取相反数
-     */
-    private void opposite(){
-        for(Node n : this.poly){
-            n.coef *= -1;
-        }
-    }
-
-    /**
-     * 两个多项式想减
-     * @param pn
-     * @return
-     */
-    public PolynomialGF sub(PolynomialGF pn){
-        // 取相反数
-        PolynomialGF pnCopy = pn.copy();
-        pnCopy.opposite();
-
-        return this.add(pnCopy);
-    }
-
-    /**
      * 多项式相乘.
      * @param pn2
      * @return
@@ -190,7 +132,7 @@ public class PolynomialGF{
         Iterator<Node> p2 = pn2.poly.iterator();
         Node p1_node, p2_node;
         int index;
-        int coef, expn;
+        int alpha_expn, expn;
 
         PolynomialGF pn3 = new PolynomialGF();
       
@@ -200,10 +142,10 @@ public class PolynomialGF{
                 p2_node = p2.next();
                 index = this.poly.indexOf(p1_node);
                 { // p1_node * p2_node
-                    coef = p1_node.coef * p2_node.coef % 255;
+                    alpha_expn = Node.mulCoef(p1_node.coef, p2_node.coef);
                     expn = p1_node.expn + p2_node.expn;
  
-                    pn3.poly.add(new Node(coef, expn));
+                    pn3.poly.add(new Node(alpha_expn, expn));
                 }
                 
             }
@@ -211,66 +153,6 @@ public class PolynomialGF{
         }
 
         return pn3.simplify(); // 化简返回
-    }
-
-    /**
-     * 当前多项式的长度
-     * @return
-     */
-    private int len(){
-        return this.poly.size();
-    }
-
-    private Node divItem(Node n1, Node n2){
-        if(n1.expn < n2.expn){
-            return null;
-        }else{
-            return new Node(n1.coef/n2.coef, n1.expn-n2.expn);
-        }
-    }
-
-
-
-    /**
-     * 除法
-     * this 当前的多项式是 被除数
-     * @param divisor 除数
-     * @param quotient 商
-     * @param remainder 余数
-     */
-    public void div(PolynomialGF divisor, PolynomialGF quotient, PolynomialGF remainder){
-        this.simplify();
-        divisor.simplify();
-
-        //  n1 被除数，n2 除数 的最高项
-        Node n1 = this.maxExpnItem();
-        Node n2 = divisor.maxExpnItem();
-        // System.out.println(n1);
-        // System.out.println(n2);
-        // 获取最大项，找到商.
-        Node quotientNode; // 临时商
-        quotientNode = divItem(n1, n2);
-        if(quotientNode==null){
-            remainder.poly = this.copy().poly;
-            return;
-        }
-
-        // 结果1
-        PolynomialGF r1 = divisor.mul(new PolynomialGF(quotientNode));
-        //System.out.println(r1);
-
-        // 计算差
-        //System.out.println(this);
-        //System.out.println(r1);
-
-
-        PolynomialGF r2 = this.sub(r1);
-        //System.out.println(r2);
-        
-        quotient.addItem(quotientNode);
-
-        r2.div(divisor, quotient, remainder);
-
     }
 
     /**
@@ -320,43 +202,23 @@ public class PolynomialGF{
     // 测试多项式运算
     public static void main(String[] args){
         PolynomialGF a = new PolynomialGF();
-        a.addItem(-1,2).addItem(3,2).addItem(0,1).addItem(90,3);
+        a.addItem(3,2).addItem(0,1).addItem(90,3);
         a.addItem(10,2);
         a.addItem(7,0);
-        System.out.println(a); // +90x^{3}+12x^{2}+7
+        System.out.println(a); // +2^{90}x^{3}+2^{115}x^{2}+x+2^{7}
 
         PolynomialGF b = new PolynomialGF();
         b.addItem(0,3).addItem(3,2).addItem(5,1).addItem(3,-3);
-        System.out.println(b); // +3x^{2}+5x+3x^{-3}
+        System.out.println(b); // +x^{3}+2^{3}x^{2}+2^{5}x
 
-        // 加法操作
+        // // 加法操作
         PolynomialGF c = a.add(b);
-        System.out.println(c); // +90x^{3}+15x^{2}+5x+7+3x^{-3}
+        System.out.println(c); // +2^{62}x^{3}+2^{10}x^{2}+2^{138}x+2^{7}
 
-        // 减法操作
-        PolynomialGF c2 = a.sub(b);
-        System.out.println(c2); // +90x^{3}+9x^{2}-5x+7-3x^{-3}
-
-        // 乘法操作
+        // // 乘法操作
         PolynomialGF d = a.mul(b);
-        System.out.println(d); // +270x^{5}+486x^{4}+60x^{3}+21x^{2}+35x+270+36x^{-1}+21x^{-3}
-        
-        
-        /*
-        // 除法操作 在GF(256) 下有问题
-        PolynomialGF d1 = new PolynomialGF().addItem(1,3).addItem(5,2).addItem(6,1).addItem(3,0);
-        PolynomialGF e = new PolynomialGF(new Node(1,1)).addItem(1,0);
+        System.out.println(d); // +2^{90}x^{6}+2^{73}x^{5}+2^{225}x^{4}+2^{171}x^{3}+2^{143}x^{2}+2^{12}x
 
-        // 商 和 余数
-        PolynomialGF quotient = new PolynomialGF();
-        PolynomialGF remainder = new PolynomialGF();
-        d1.div(e, quotient, remainder);
-        
-        System.out.println(d1); // +x^{3}+5x^{2}+6x+3
-        System.out.println(e); // x+1
-        System.out.println(String.format("%s ... (%s) ", quotient, remainder)); // +x^{2}+4x+2 ... (+1)
-        System.out.println(String.format("%s + [(%s) / (%s)]", quotient, remainder, e)); // +x^{2}+4x+2 + [(+1) / (+x+1)]
-        */
     }
 }
 
