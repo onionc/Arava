@@ -7,7 +7,6 @@ import java.util.Arrays;
  */
 public class ErrorCorrectionCoding{
     public static void main(String[] args){
-
         // 数据码 和 纠错码数
         int [] codeWords = {32, 91, 11, 120, 209, 114, 220, 77, 67, 64, 236, 17, 236, 17, 236, 17};
         int e_n = 10;
@@ -75,7 +74,6 @@ public class ErrorCorrectionCoding{
             t = new PolynomialGF().addItem(0, 1).addItem(ECC_Number-1,0);
             return t.mul(generatorPolynomial(ECC_Number-1));
         }
-        
     }
     
     /**
@@ -104,13 +102,11 @@ public class ErrorCorrectionCoding{
         mp = mp.mul(xn);
         Log.getLogger().info("消息多项式*x^n: " + mp);
 
-
         // 多项式除法，求余数");
         PolynomialGF quotient = new PolynomialGF();
         PolynomialGF remainder = new PolynomialGF();
         mp.div(gp, quotient, remainder);
         Log.getLogger().info("余数: " + remainder);
-       
 
         // 纠错码
         int[] e = remainder.getCoefs();
@@ -118,6 +114,4 @@ public class ErrorCorrectionCoding{
 
         return e;
     }
-
-
 }

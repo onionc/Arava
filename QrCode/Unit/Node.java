@@ -1,6 +1,5 @@
 package Unit;
 
-
 /**
  * 每一项（每个节点）的数据
  * @param args
@@ -96,11 +95,7 @@ class Coef{
             this.alpha_expn = Power.getAntilog(value);
         }else{
             this.alpha_expn = value;
-            if(value<0)
             this.value = Power.getPower(value);
-            else
-            this.value = Power.getPower(value);
-
         }
     }
     
@@ -108,7 +103,6 @@ class Coef{
     public String toString(){
         if(outputFormatValue)
             return String.format("%d", value);
-
         else
             return String.format("%c^{%d}", alpha, alpha_expn);
     }

@@ -22,12 +22,10 @@ public class PolynomialGF{
         this.addItem(n1);
     }
 
-
     /**
      * 添加一项
      */
     public PolynomialGF addItem(int alpha_expn, int expn){
-        
         return this.addItem(alpha_expn, expn, false);
     }
 
@@ -130,11 +128,9 @@ public class PolynomialGF{
      * @return
      */
     public PolynomialGF mul(PolynomialGF pn2){
-
         Iterator<Node> p1 = this.poly.iterator();
         Iterator<Node> p2 = pn2.poly.iterator();
         Node p1_node, p2_node;
-        int index;
         int alpha_expn, expn;
 
         PolynomialGF pn3 = new PolynomialGF();
@@ -143,7 +139,6 @@ public class PolynomialGF{
             p1_node = p1.next();
             while(p2.hasNext()){
                 p2_node = p2.next();
-                index = this.poly.indexOf(p1_node);
                 { // p1_node * p2_node
                     alpha_expn = Node.mulCoef(p1_node.coef, p2_node.coef);
                     expn = p1_node.expn + p2_node.expn;
@@ -175,7 +170,6 @@ public class PolynomialGF{
         }
     }
 
-
     /**
      * 除法
      * @param divisor
@@ -198,10 +192,10 @@ public class PolynomialGF{
         // 计算差
         PolynomialGF r2 = this.add(r1);
         
+        // 商加一项，如果用不到商，可以省略
         quotient.addItem(quotientNode);
 
         r2.div(divisor, quotient, remainder);
-
     }
 
     /**
@@ -236,7 +230,7 @@ public class PolynomialGF{
     /**
      * 返回系数
      */
-     public int[] getCoefs(){
+    public int[] getCoefs(){
         int[] r = new int[this.poly.size()];
         int i = 0;
 
@@ -245,7 +239,7 @@ public class PolynomialGF{
             r[i++] = this.iter.next().coef.value;
         }
         return r;
-     }
+    }
 
     /**
      * 多项式排序
