@@ -70,13 +70,9 @@ public class ErrorCorrectionCoding{
         // n=0
         if(ECC_Number==1){
             t.addItem(0, 1).addItem(0,0);
-            Log.getLogger().info("add Item: " + t);
-
             return t;
         }else{
             t = new PolynomialGF().addItem(0, 1).addItem(ECC_Number-1,0);
-            Log.getLogger().info("add Item: " + t);
-
             return t.mul(generatorPolynomial(ECC_Number-1));
         }
         
@@ -89,28 +85,37 @@ public class ErrorCorrectionCoding{
      * @return
      */
     public static int[] getCode(int dataCode[], int eNum){
+        Log.getLogger().info(String.format("生成纠错码: \n数据码 %s \n纠错码个数 %d" ,Arrays.toString(dataCode), eNum));
+
         if(eNum<1 || dataCode.length<1){
             return null;
         }
 
         // 消息多项式
         PolynomialGF mp = new ErrorCorrectionCoding().messagePolynomial(dataCode);
+        Log.getLogger().info("消息多项式: " + mp);
 
         // 生成器多项式 （nNum个纠错码）
         PolynomialGF gp = new ErrorCorrectionCoding().generatorPolynomial(eNum);
+        Log.getLogger().info("生成器多项式: " + gp);
 
         // 消息多项式 * x^n
         PolynomialGF xn = new PolynomialGF(new Node(0, eNum));
         mp = mp.mul(xn);
+        Log.getLogger().info("消息多项式*x^n: " + mp);
+
 
         // 多项式除法，求余数");
         PolynomialGF quotient = new PolynomialGF();
         PolynomialGF remainder = new PolynomialGF();
         mp.div(gp, quotient, remainder);
+        Log.getLogger().info("余数: " + remainder);
        
 
         // 纠错码
         int[] e = remainder.getCoefs();
+        Log.getLogger().info("纠错码: " + Arrays.toString(e));
+
         return e;
     }
 

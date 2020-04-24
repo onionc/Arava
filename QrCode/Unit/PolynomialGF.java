@@ -9,8 +9,6 @@ import java.util.List;
 /**
  * 一元多项式, GF(256)
  */
-
-
 public class PolynomialGF{
     private List<Node> poly;
     private Iterator<Node> iter; // 每次使用请重置
@@ -161,7 +159,7 @@ public class PolynomialGF{
     }
 
     /**
-     * n1/n2 去导项
+     * n1/n2 计算两项的商
      * @param n1
      * @param n2
      * @return
@@ -186,8 +184,6 @@ public class PolynomialGF{
         //  n1 被除数，n2 除数 的最高项
         Node n1 = this.maxExpnItem();
         Node n2 = divisor.maxExpnItem();
-        // System.out.println(n1);
-        // System.out.println(n2);
         // 获取最大项，找到商.
         Node quotientNode; // 临时商
         quotientNode = divItem(n1, n2);
@@ -198,15 +194,9 @@ public class PolynomialGF{
 
         // 结果1
         PolynomialGF r1 = divisor.mul(new PolynomialGF(quotientNode));
-        //System.out.println(r1);
 
         // 计算差
-        //System.out.println(this);
-        //System.out.println(r1);
-
-
         PolynomialGF r2 = this.add(r1);
-        //System.out.println(r2);
         
         quotient.addItem(quotientNode);
 
