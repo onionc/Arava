@@ -29,9 +29,12 @@ public class PolynomialGF{
      * 添加一项
      */
     public PolynomialGF addItem(int alpha_expn, int expn){
-        this.addNode(new Node(alpha_expn, expn));
-        sort();
         
+        return this.addItem(alpha_expn, expn, false);
+    }
+
+    public PolynomialGF addItem(int alpha_expn, int expn, boolean isCoefValue){
+        this.addNode(new Node(alpha_expn, expn, isCoefValue));
         return this;
     }
 
@@ -42,7 +45,6 @@ public class PolynomialGF{
         // 过滤系数为0的项
         if(item.coef.value != 0){
             this.addNode(item);
-            sort();
         }
         return this;
     }
@@ -77,16 +79,20 @@ public class PolynomialGF{
                 if(sum == 0)
                     this.poly.remove(index);
                 else
-                    this.poly.set(index, new Node(sum, p1_node.expn));
-                    n2Copy = null;
+                    this.poly.set(index, new Node(sum, p1_node.expn, true));
+
+                n2Copy = null;
                 break;
             }
+            
         }
 
         if(n2Copy != null){
             this.poly.add(n2Copy);
         }
-        return ;
+
+        sort();
+        return;
     }
 
     /**
@@ -117,7 +123,6 @@ public class PolynomialGF{
             Node t = p2.next();
             pn_result.addNode(t);
         }
-        pn_result.sort();
         return pn_result;
     }
 
@@ -156,9 +161,64 @@ public class PolynomialGF{
     }
 
     /**
+     * n1/n2 去导项
+     * @param n1
+     * @param n2
+     * @return
+     */
+    private Node divItem(Node n1, Node n2){
+        if(n1.expn < n2.expn){
+            return null;
+        }else{
+            return new Node(
+                n1.coef.alpha_expn - n2.coef.alpha_expn, 
+                n1.expn - n2.expn
+            );
+        }
+    }
+
+
+    /**
+     * 除法
+     * @param divisor
+     */
+    public void div(PolynomialGF divisor, PolynomialGF quotient, PolynomialGF remainder){
+        //  n1 被除数，n2 除数 的最高项
+        Node n1 = this.maxExpnItem();
+        Node n2 = divisor.maxExpnItem();
+        // System.out.println(n1);
+        // System.out.println(n2);
+        // 获取最大项，找到商.
+        Node quotientNode; // 临时商
+        quotientNode = divItem(n1, n2);
+        if(quotientNode==null){
+            remainder.poly = this.copy().poly;
+            return;
+        }
+
+        // 结果1
+        PolynomialGF r1 = divisor.mul(new PolynomialGF(quotientNode));
+        //System.out.println(r1);
+
+        // 计算差
+        //System.out.println(this);
+        //System.out.println(r1);
+
+
+        PolynomialGF r2 = this.add(r1);
+        //System.out.println(r2);
+        
+        quotient.addItem(quotientNode);
+
+        r2.div(divisor, quotient, remainder);
+
+    }
+
+    /**
      * 获取多项式中的最大项
      */
     private Node maxExpnItem(){
+        this.simplify();
         iter = this.poly.iterator();
         if(iter.hasNext()){
             return iter.next();
@@ -182,6 +242,20 @@ public class PolynomialGF{
         }
         return s.toString();
     }
+
+    /**
+     * 返回系数
+     */
+     public int[] getCoefs(){
+        int[] r = new int[this.poly.size()];
+        int i = 0;
+
+        this.iter = this.poly.iterator();
+        while(this.iter.hasNext()){
+            r[i++] = this.iter.next().coef.value;
+        }
+        return r;
+     }
 
     /**
      * 多项式排序
@@ -211,14 +285,13 @@ public class PolynomialGF{
         b.addItem(0,3).addItem(3,2).addItem(5,1).addItem(3,-3);
         System.out.println(b); // +x^{3}+2^{3}x^{2}+2^{5}x
 
-        // // 加法操作
+        // 加法操作
         PolynomialGF c = a.add(b);
         System.out.println(c); // +2^{62}x^{3}+2^{10}x^{2}+2^{138}x+2^{7}
 
-        // // 乘法操作
+        // 乘法操作
         PolynomialGF d = a.mul(b);
         System.out.println(d); // +2^{90}x^{6}+2^{73}x^{5}+2^{225}x^{4}+2^{171}x^{3}+2^{143}x^{2}+2^{12}x
-
     }
 }
 
