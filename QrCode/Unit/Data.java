@@ -1,7 +1,13 @@
 package Unit;
 
 public class Data {
-    // 各版本、各纠错级别下的四种模式的字符容量 https://www.thonky.com/qr-code-tutorial/character-capacities
+
+    // 四种模式，顺序不能变，数据里面用到索引
+    enum MODE{Numeric, Alphanumeric, Byte, Kanji};
+    // 纠错级别，顺序不能变
+    static enum LEVEL{L, M, Q, H};
+
+    // 字符容量。各版本、各纠错级别下的四种模式的字符容量 https://www.thonky.com/qr-code-tutorial/character-capacities
     // 0 version, 版本，有效范围：[1,40]
     // 1 level, 容错级别 (LMQH)分别对应: [0,3]
     // 3 mode, 模式(Numeric, Alphanumeric, Byte, Kanji)：[0,3]
@@ -210,4 +216,26 @@ public class Data {
             {3057, 1852, 1273, 784},
         }
     };
+    // 模式指示器，顺序依次是(Numeric, Alpha, Byte, Kanji, ECI) 最后一个为混合模式 (ECI mode)
+    static final String ModeIndicator[] = {"0001", "0010", "0100", "1000", "0111"}; 
+
+    /**
+     * 字符计数指示器
+     * @param version
+     * @return
+     */
+    static final int[] CharacterCountIndicator(int version){
+        if(version>=1 && version<=9){
+            return new int[] {10, 9, 8, 8};
+        }else if(version>=10 && version<=26){
+            return new int[] {12, 11, 16, 10};
+        }else if(version>=27 && version<=40){
+            return new int[] {14, 13, 16, 12};
+        }else{
+            return null;
+        }
+    }
+
+    // 字符编码, 值分别是[0,44]
+    static final String CharCode = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:"; 
 }
