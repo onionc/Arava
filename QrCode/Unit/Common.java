@@ -86,7 +86,6 @@ public class Common {
     public static int[] getUtf8Bytes(String s){
         try{
             byte b[] = s.getBytes("utf-8");
-            System.out.println(Arrays.toString(b));
             int bytes[] = new int[b.length];
             for(int i = 0; i < b.length; i++) {
                 bytes[i] = b[i] & 0xFF;
@@ -111,9 +110,6 @@ public class Common {
         }
         return r;
     }
-
-
-
 }
 
 

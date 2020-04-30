@@ -40,12 +40,18 @@ class QrCode{
 	        this.mode = Data.MODE.Numeric;
 	    }else if(Pattern.compile("^[0-9A-Z $%*+-./:]+$").matcher(this.data).matches()){
             this.mode = Data.MODE.Alphanumeric;
-        }else if(Charset.forName("ISO-8859-1").newEncoder().canEncode(this.data)){
+        }else{
+            this.mode = Data.MODE.Byte; // Byte 和 Kanji 数据都用Byte
+            this.dataLen = this.data.getBytes().length;
+        }
+        
+        /*
+        else if(Charset.forName("ISO-8859-1").newEncoder().canEncode(this.data)){
             this.mode = Data.MODE.Byte;
         }else if(Charset.forName("UTF-8").newEncoder().canEncode(this.data)){
-            //this.mode = Data.MODE.Kanji;
-            this.mode = Data.MODE.Byte; // Todo 数据长度要重新计算
+            this.mode = Data.MODE.Kanji;
         }
+        */
     }
 
     /**
@@ -81,10 +87,9 @@ class QrCode{
         dataE.append(Common.formatBin(dci, this.dataLen));
         
         // 根据模式进行编码
-        
+        // EncodeData e4 = new EncodeData(this);
         // System.out.println(dci + dataE.toString());
     }
-    
 
     /**
      * 输出二维码基本信息
@@ -105,12 +110,11 @@ class QrCodeTest{
         new QrCode("1234").info(); // length=4, mode=Numeric, level=L, version=1
         new QrCode("/1T $:").info(); // length=6, mode=Alphanumeric, level=L, version=1
         new QrCode("/1T $:^").info(); // length=7, mode=Byte, level=L, version=1
-        new QrCode("/1T $:^谦").info(); // length=8, mode=Kanji, level=L, version=1
+        new QrCode("/1T $:^谦").info(); // length=8, mode=Kanji, level=L, version=1 // byte编码后是 length=10, mode=Byte, level=L, version=1
         // 测试同样数据在不同纠错级别下（根据数据长度选择的最小）的二维码版本
-        new QrCode("如果爱是谎言，王子说的是谎言，如果音乐是谎言，你的心是荒野").info(); // length=9, mode=Kanji, level=L, version=1
-        new QrCode("如果爱是谎言，王子说的是谎言，如果音乐是谎言，你的心是荒野", Data.LEVEL.H).info(); // length=29, mode=Kanji, level=H, version=6
-        
-        
+        new QrCode("如果爱是谎言，王子说的是谎言，如果音乐是谎言，你的心是荒野").info(); // length=9, mode=Kanji, level=L, version=1 // byte后：length=87, mode=Byte, level=L, version=5
+        new QrCode("如果爱是谎言，王子说的是谎言，如果音乐是谎言，你的心是荒野", Data.LEVEL.H).info(); // length=29, mode=Kanji, level=H, version=6 // byte之后：length=87, mode=Byte, level=H, version=9
+
     }
 
 }
