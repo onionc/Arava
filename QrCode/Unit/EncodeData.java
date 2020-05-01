@@ -33,7 +33,7 @@ public class EncodeData{
         }
     }
 
-    public String toString(){
+    public String getCode(){
         return this.code;
     }
 
