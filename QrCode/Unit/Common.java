@@ -110,6 +110,35 @@ public class Common {
         }
         return r;
     }
+
+    /**
+     * 将字符串s每八位转为int，返回数组
+     * @param s
+     * @return
+     */
+    public static int[] getIntByStr(String s){
+        int r[] = new int[s.length()/8];
+        for(int i=0; i<r.length; i++){
+            r[i] = Common.binStrToInt(s.substring(i*8, (i+1)*8));
+        }
+        return r;
+    }
+
+    /**
+     * bin 二进制字符串转 int
+     * 注：溢出不处理
+     * @param s
+     * @return
+     */
+    public static int binStrToInt(String s){
+        int total = 0;
+        for(int i=0; i<s.length(); i++){
+            int num = s.charAt(i)-'0' == 1?1:0;
+            total = (total<<1)+ num;
+        }
+        return total;
+    }
+
 }
 
 
@@ -136,6 +165,13 @@ class CommonTest{
         System.out.println(Arrays.toString(Common.getUtf8Bytes("中"))); // [228, 184, 173] = 0xe4b8ad
         // 字符串的utf-8编码，输出二进制
         System.out.println(Arrays.toString(Common.strToBytes("中"))); // [11100100, 10111000, 10101101]
+
+        // 二进制字符串转Int
+        System.out.println(Common.binStrToInt("010101011"));
+
+        // 字符串解析每个字节为int数组
+        
+        System.out.println(Arrays.toString(Common.getIntByStr("0101010110101010")));
 
     }
 }
