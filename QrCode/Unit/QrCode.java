@@ -1,5 +1,6 @@
 package Unit;
 
+import java.util.Arrays;
 import java.util.regex.Pattern;
 import java.nio.charset.Charset;
 
@@ -16,6 +17,11 @@ class QrCode{
     int dataLen;
     // 数据编码
     String dataEncodeStr;
+    // 数据码字
+    int dataCodewords[][][];
+    // 纠错码
+
+    
     
     public QrCode(String data, Data.LEVEL l) throws Exception{
         this.data = data;
@@ -27,6 +33,10 @@ class QrCode{
         chooseVersion();
         // 数据编码
         dataEncoding();
+        // 生成数据码字
+        this.dataCodewords = DataCodewords.getDC(this.dataEncodeStr, this.version, this.level);
+        // System.out.println(Arrays.deepToString(this.dataCodewords));
+        // 生成纠错码
 
     }
 
@@ -146,10 +156,13 @@ class QrCodeTest{
         new QrCode("如果爱是谎言，王子说的是谎言，如果音乐是谎言，你的心是荒野", Data.LEVEL.H).info(); // length=29, mode=Kanji, level=H, version=6; byte之后：length=87, mode=Byte, level=H, version=9
         */
 
+        /** 
         // 测试数据编码 
         new QrCode("HELLO WORLD", Data.LEVEL.Q).info(); // 00100000010110110000101101111000110100010111001011011100010011010100001101000000111011000001000111101100
         new QrCode("HELLO WORLD", Data.LEVEL.M).info(); // 00100000010110110000101101111000110100010111001011011100010011010100001101000000111011000001000111101100000100011110110000010001
+        */
 
+        new QrCode("HELLO WORLD", Data.LEVEL.M);
     }
 
 }
