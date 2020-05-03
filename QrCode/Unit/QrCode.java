@@ -18,7 +18,7 @@ class QrCode{
     // 数据编码
     String dataEncodeStr;
     // 数据码字
-    int dataCodewords[][][];
+    int dataCodewords[][];
     // 纠错码
 
     
