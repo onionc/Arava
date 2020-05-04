@@ -139,6 +139,42 @@ public class Common {
         return total;
     }
 
+    /**
+     * 交错读取数据。从二维数组交错读取数据，转为一维数组
+     * @param data 原数据
+     * @return
+     */
+    public static int[] interleaveData(int data[][]){
+        // 求出总长度
+        int length = 0;
+        for(int r[] : data){
+            length+=r.length;
+        }
+
+        int r2[] = new int[length]; // 结果
+        int ri=0; // r2的索引
+        int i=0,j=0,imax=data.length; // imax为数据行
+        int noFlag = 0; // 无数据标志
+        while(true){
+            if(noFlag==imax){ // 当每一行都没有获取到数据，则结束
+                break;
+            }
+
+            if(i<imax && j<data[i].length){
+                r2[ri++] = data[i][j];
+                noFlag=0;
+            }else{
+                noFlag++;
+            }
+            i++;
+            if(i>=imax){
+                i=0;
+                j++;
+            }
+        }
+        return r2;
+    }
+
 }
 
 
@@ -167,11 +203,14 @@ class CommonTest{
         System.out.println(Arrays.toString(Common.strToBytes("中"))); // [11100100, 10111000, 10101101]
 
         // 二进制字符串转Int
-        System.out.println(Common.binStrToInt("010101011"));
+        System.out.println(Common.binStrToInt("010101011")); // 171
 
         // 字符串解析每个字节为int数组
-        
-        System.out.println(Arrays.toString(Common.getIntByStr("0101010110101010")));
+        System.out.println(Arrays.toString(Common.getIntByStr("0101010110101010"))); // [85, 170]
 
+        // 交错读取数据
+        int data1[][] = {{1,2,3},{4,5},{6,7,8,9,0}};
+        int data2[] = Common.interleaveData(data1);
+        System.out.println(Arrays.toString(data2)); // [1, 4, 6, 2, 5, 7, 3, 8, 9, 0]
     }
 }

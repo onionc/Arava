@@ -21,7 +21,10 @@ class QrCode{
     int dataCodewords[][];
     // 纠错码
 
-    
+    private int eccAndBlocksIndex() {
+        int index = (this.version-1)*4 + this.level.ordinal();
+        return index;
+    }
     
     public QrCode(String data, Data.LEVEL l) throws Exception{
         this.data = data;
@@ -35,8 +38,18 @@ class QrCode{
         dataEncoding();
         // 生成数据码字
         this.dataCodewords = DataCodewords.getDC(this.dataEncodeStr, this.version, this.level);
-        // System.out.println(Arrays.deepToString(this.dataCodewords));
+        // 交错数据码字
+        int[] iDc = Common.interleaveData(this.dataCodewords);
+        System.out.println(Arrays.toString(iDc));
         // 生成纠错码
+        int ecc[][] = new int[this.dataCodewords.length][];
+        for(int i=0; i<this.dataCodewords.length; i++){
+            ecc[i] = ErrorCorrectionCoding.getCode(this.dataCodewords[i], Data.ECC_AND_BLOCKS[this.eccAndBlocksIndex()][Data.ECC_AND_BLOCKS_COLUMN.ECC_PER_BLOCK.ordinal()]);
+        }
+        System.out.println(Arrays.deepToString(ecc));
+        // 交错纠错码
+        int[] iEcc = Common.interleaveData(ecc);
+        System.out.println(Arrays.toString(iEcc));
 
     }
 
@@ -117,7 +130,7 @@ class QrCode{
     private void makeupCode(StringBuffer bs){
         // 获取数据码总数
 
-        int index = (this.version-1)*4 + this.level.ordinal();
+        int index = this.eccAndBlocksIndex();
         int dcTotal = Data.ECC_AND_BLOCKS[index][Data.ECC_AND_BLOCKS_COLUMN.DC_TOTAL.ordinal()];
         int requireBits = dcTotal * 8;
 
@@ -134,8 +147,10 @@ class QrCode{
      * 输出二维码基本信息
      */
     public void info(){
-        System.out.printf("length=%d, mode=%s, level=%s, version=%d\ncode encoding: %s", 
-            this.dataLen, this.mode.name(), this.level.name(), this.version, this.dataEncodeStr
+        System.out.printf("length=%d, mode=%s, level=%s, version=%d\ncode encoding: %s\n" + 
+            "data codewords: %s", 
+            this.dataLen, this.mode.name(), this.level.name(), this.version, this.dataEncodeStr,
+            Arrays.deepToString(this.dataCodewords)
         );
     }
 }
@@ -162,7 +177,7 @@ class QrCodeTest{
         new QrCode("HELLO WORLD", Data.LEVEL.M).info(); // 00100000010110110000101101111000110100010111001011011100010011010100001101000000111011000001000111101100000100011110110000010001
         */
 
-        new QrCode("HELLO WORLD", Data.LEVEL.M);
+        new QrCode("HELLO WORLD", Data.LEVEL.M).info();
     }
 
 }
