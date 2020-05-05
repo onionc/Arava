@@ -19,7 +19,8 @@ class QrCode{
     String dataEncodeStr;
     // 数据码字
     int dataCodewords[][];
-    // 纠错码
+    // 最终消息
+    String message;
 
     private int eccAndBlocksIndex() {
         int index = (this.version-1)*4 + this.level.ordinal();
@@ -36,21 +37,11 @@ class QrCode{
         chooseVersion();
         // 数据编码
         dataEncoding();
-        // 生成数据码字
-        this.dataCodewords = DataCodewords.getDC(this.dataEncodeStr, this.version, this.level);
-        // 交错数据码字
-        int[] iDc = Common.interleaveData(this.dataCodewords);
-        System.out.println(Arrays.toString(iDc));
-        // 生成纠错码
-        int ecc[][] = new int[this.dataCodewords.length][];
-        for(int i=0; i<this.dataCodewords.length; i++){
-            ecc[i] = ErrorCorrectionCoding.getCode(this.dataCodewords[i], Data.ECC_AND_BLOCKS[this.eccAndBlocksIndex()][Data.ECC_AND_BLOCKS_COLUMN.ECC_PER_BLOCK.ordinal()]);
-        }
-        System.out.println(Arrays.deepToString(ecc));
-        // 交错纠错码
-        int[] iEcc = Common.interleaveData(ecc);
-        System.out.println(Arrays.toString(iEcc));
+        // 生成最终的消息
+        structFinalMessage();
 
+        // System.out.println(this.message);
+        
     }
 
     public QrCode(String data) throws Exception{
@@ -99,6 +90,9 @@ class QrCode{
         }
     }
 
+    /**
+     * 数据编码
+     */
     protected void dataEncoding(){
         StringBuffer dataE = new StringBuffer();
         int modeIndex = this.mode.ordinal();
@@ -144,13 +138,50 @@ class QrCode{
     }
 
     /**
+     * 格式化最终消息
+     */
+    protected void structFinalMessage(){
+        // 生成数据码字
+        this.dataCodewords = DataCodewords.getDC(this.dataEncodeStr, this.version, this.level);
+        
+        // 交错数据码字
+        int[] iDc = Common.interleaveData(this.dataCodewords);
+
+        // 生成纠错码
+        int ecc[][] = new int[this.dataCodewords.length][];
+        for(int i=0; i<this.dataCodewords.length; i++){
+            ecc[i] = ErrorCorrectionCoding.getCode(this.dataCodewords[i], Data.ECC_AND_BLOCKS[this.eccAndBlocksIndex()][Data.ECC_AND_BLOCKS_COLUMN.ECC_PER_BLOCK.ordinal()]);
+        }
+
+        // 交错纠错码
+        int[] iEcc = Common.interleaveData(ecc);
+
+        // 数据码和交错码拼接
+        int[] messageArr = Common.joinArr(iDc, iEcc);
+
+        // 转为二进制
+        StringBuffer message = new StringBuffer();
+        for(int i : messageArr){
+            message.append(Common.formatBin(8, i));
+        }
+
+        // 添加0位
+        int count = Data.VersionsRequiredRemainderBits[this.version];
+        for(int i=0; i<count; i++){
+            message.append('0');
+        }
+
+        this.message = message.toString();
+    }
+
+    /**
      * 输出二维码基本信息
      */
     public void info(){
         System.out.printf("length=%d, mode=%s, level=%s, version=%d\ncode encoding: %s\n" + 
-            "data codewords: %s", 
+            "data codewords: %s\nfinal message: %s\n", 
             this.dataLen, this.mode.name(), this.level.name(), this.version, this.dataEncodeStr,
-            Arrays.deepToString(this.dataCodewords)
+            Arrays.deepToString(this.dataCodewords), this.message
         );
     }
 }

@@ -412,4 +412,6 @@ public class Data {
 
     // 字符编码, 值分别是[0,44]
     static final String CharCode = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:"; 
+    // 版本所需位 (第一项的0是后加的，为了索引和版本统一，1-40)
+    static final int[] VersionsRequiredRemainderBits = {0,0,7,7,7,7,7,0,0,0,0,0,0,0,3,3,3,3,3,3,3,4,4,4,4,4,4,4,3,3,3,3,3,3,3,0,0,0,0,0,0};
 }

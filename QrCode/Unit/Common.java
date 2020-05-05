@@ -175,6 +175,24 @@ public class Common {
         return r2;
     }
 
+    /**
+     * 合并（拼接）两个数组
+     * @param a
+     * @param b
+     * @return
+     */
+    public static int[] joinArr(int a[], int b[]){
+        int r[] = new int[a.length+b.length];
+        int i=0;
+        for(int ai:a){
+            r[i++] = ai;
+        }
+        for(int bi:b){
+            r[i++] = bi;
+        }
+        return r;
+    }
+
 }
 
 
@@ -212,5 +230,11 @@ class CommonTest{
         int data1[][] = {{1,2,3},{4,5},{6,7,8,9,0}};
         int data2[] = Common.interleaveData(data1);
         System.out.println(Arrays.toString(data2)); // [1, 4, 6, 2, 5, 7, 3, 8, 9, 0]
+
+        // 合并两个数组
+        int data3[] = {1,2,3};
+        int data4[] = {4,5,6};
+        System.out.println(Arrays.toString(Common.joinArr(data3, data4))); // [1, 2, 3, 4, 5, 6]
+
     }
 }
