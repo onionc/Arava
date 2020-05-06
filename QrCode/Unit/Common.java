@@ -89,7 +89,6 @@ public class Common {
             int bytes[] = new int[b.length];
             for(int i = 0; i < b.length; i++) {
                 bytes[i] = b[i] & 0xFF;
-                // System.out.printf("%x %s\n", bytes[i], Common.formatBin(10,bytes[i]));
             }
             return bytes;
         }catch(UnsupportedEncodingException e){
@@ -133,7 +132,7 @@ public class Common {
     public static int binStrToInt(String s){
         int total = 0;
         for(int i=0; i<s.length(); i++){
-            int num = s.charAt(i)-'0' == 1?1:0;
+            int num = s.charAt(i)-'0' == 1 ? 1 : 0;
             total = (total<<1)+ num;
         }
         return total;
@@ -155,11 +154,7 @@ public class Common {
         int ri=0; // r2的索引
         int i=0,j=0,imax=data.length; // imax为数据行
         int noFlag = 0; // 无数据标志
-        while(true){
-            if(noFlag==imax){ // 当每一行都没有获取到数据，则结束
-                break;
-            }
-
+        while(noFlag<imax){ // 当每一行都没有获取到数据 noFlag>=imax，则结束
             if(i<imax && j<data[i].length){
                 r2[ri++] = data[i][j];
                 noFlag=0;
@@ -191,6 +186,75 @@ public class Common {
             r[i++] = bi;
         }
         return r;
+    }
+
+    /**
+     * 将int类型的二维数组，转为boolean类型（0 -> false, !0 -> true）
+     * @param data
+     * @return
+     */
+    public static boolean[][] intToBoolInMatrix(int data[][]){
+        boolean b[][] = new boolean[data.length][];
+        for(int i=0; i<data.length; i++){
+            b[i] = new boolean[data[i].length];
+            for(int j=0; j<data[i].length; j++){
+                b[i][j] = data[i][j]==0 ? false : true;
+            }
+        }
+        return b;
+    }
+
+    /**
+     * 在二维数组data中，x,y位置开始写入数据 fillData
+     * @param data
+     * @param x
+     * @param y
+     * @param fillData
+     */
+    public static void setMatrix(int data[][], int x, int y, int fillData[][]){
+        for(int i=x; i<data.length; i++){
+            for(int j=y; j<data[i].length; j++){
+                // fillData[i-x][j-y] 存在
+                // System.out.printf("%d %d = %d %d\n",i,j,i-x,j-y);
+                if(i-x<fillData.length && j-y<fillData[i-x].length){
+                    data[i][j] = fillData[i-x][j-y];
+                }else if(i-x>=fillData.length){
+                    return;
+                }else if(j-y>=fillData[i-x].length){
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * 在二维数组data中，x,y位置开始写入数据 fillData, 数据为-1才可以不写入
+     * @param data
+     * @param x
+     * @param y
+     * @param fillData
+     */
+    public static boolean setMatrixExcept(int data[][], int x, int y, int fillData[][]){
+        int temp[][] = data.clone();
+        
+        end:
+        for(int i=x; i<data.length; i++){
+            for(int j=y; j<data[i].length; j++){
+                // fillData[i-x][j-y] 存在
+                if(i-x<fillData.length && j-y<fillData[i-x].length){
+                    if(data[i][j]!=-1) return false;
+                    temp[i][j] = fillData[i-x][j-y];
+                }else if(i-x>=fillData.length){
+                    break end; // 跳过后续执行
+                }else if(j-y>=fillData[i-x].length){
+                    break; // 跳过本行数据
+                }
+            }
+        }
+        
+        data = temp.clone();
+
+        return true;
     }
 
 }
@@ -235,6 +299,24 @@ class CommonTest{
         int data3[] = {1,2,3};
         int data4[] = {4,5,6};
         System.out.println(Arrays.toString(Common.joinArr(data3, data4))); // [1, 2, 3, 4, 5, 6]
+
+        // int类型二维数组转boolean
+        int data5[][] = {{1, 1, 0}, {0, 5, 1}};
+        boolean data6[][] =  Common.intToBoolInMatrix(data5);
+        System.out.println(Arrays.deepToString(data6)); // [[true, true, false], [false, true, true]]
+    
+        // 二维数组替换
+        int data7[][] = {
+            {0,0,0,0},
+            {0,0,0,0}
+        };
+        int data8[][] = {
+            {1,2,3},
+            {1,5}
+        };
+        Common.setMatrix(data7, 0, 2, data8);
+        System.out.println(Arrays.deepToString(data7)); // [[0, 0, 1, 2], [0, 0, 1, 5]]
+
 
     }
 }

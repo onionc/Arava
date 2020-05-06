@@ -19,8 +19,10 @@ class QrCode{
     String dataEncodeStr;
     // 数据码字
     int dataCodewords[][];
-    // 最终消息
+    // 最终的数据字符串
     String message;
+    // 矩阵
+    int dataMatrix[][];
 
     private int eccAndBlocksIndex() {
         int index = (this.version-1)*4 + this.level.ordinal();
@@ -37,9 +39,11 @@ class QrCode{
         chooseVersion();
         // 数据编码
         dataEncoding();
-        // 生成最终的消息
+        // 生成最终的数据字符串
         structFinalMessage();
 
+        // 模块在矩阵中的位置 （包含数据信息和功能模块）
+        modulePlacementInMatrix();
         // System.out.println(this.message);
         
     }
@@ -138,7 +142,7 @@ class QrCode{
     }
 
     /**
-     * 格式化最终消息
+     * 生成和格式化最终数据信息
      */
     protected void structFinalMessage(){
         // 生成数据码字
@@ -174,6 +178,50 @@ class QrCode{
         this.message = message.toString();
     }
 
+    /**
+     * 模块在矩阵中的位置 （包含数据信息和功能模块）
+     * 模块和像素有区别：二维码中的黑白块都是模块，绘制的时候一个块可能占用了多个像素
+     * 功能模式是二维码规范要求的二维码非数据元素，如二维码矩阵四角的三种查找模式
+     * 
+     */
+    protected void modulePlacementInMatrix(){
+        this.version=8;
+        int size = Data.getSize(this.version);
+        // 初始化
+        this.dataMatrix = new int[size][size];
+        for(int i=0; i<this.dataMatrix.length; i++){
+            for(int j=0; j<this.dataMatrix[i].length; j++){
+                this.dataMatrix[i][j] = -1;
+            }
+        }
+
+        // 添加查找模式 Finder patterns
+        Common.setMatrix(this.dataMatrix, 0, 0, Data.FinderPatterns); // top-left
+        Common.setMatrix(this.dataMatrix, 0, size-7, Data.FinderPatterns); // top-right
+        Common.setMatrix(this.dataMatrix, size-7, 0, Data.FinderPatterns); // bottom-left
+        new Paint(300, Common.intToBoolInMatrix(this.dataMatrix), true).save("./image/a5.png");
+        
+        // 添加分隔符 Seperators
+        Common.setMatrix(this.dataMatrix, 7, 0, Data.SeperatorsRow);
+        Common.setMatrix(this.dataMatrix, 0, 7, Data.SeperatorsColumn);
+        Common.setMatrix(this.dataMatrix, 7, size-8, Data.SeperatorsRow);
+        Common.setMatrix(this.dataMatrix, 0, size-8, Data.SeperatorsColumn);
+        Common.setMatrix(this.dataMatrix, size-8, 0, Data.SeperatorsRow);
+        Common.setMatrix(this.dataMatrix, size-8, 7, Data.SeperatorsColumn);
+
+
+
+        // 对齐模式 Alignment Patterns
+        int r[][] = Data.AlignmentPatternPosition(8);
+        for(int apl[]: r){
+            boolean b = Common.setMatrixExcept(this.dataMatrix, apl[0]-2, apl[1]-2, Data.AlignmentPatterns);
+            System.out.printf("x,y: %d %d %b\n", apl[0]-2, apl[1]-2, b);
+        }
+
+        new Paint(300, Common.intToBoolInMatrix(this.dataMatrix), true).save("./image/a6.png");
+
+        //System.out.println(Arrays.deepToString(this.dataMatrix));
+    }
     /**
      * 输出二维码基本信息
      */

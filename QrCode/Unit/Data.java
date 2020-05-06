@@ -1,5 +1,7 @@
 package Unit;
 
+import java.util.Arrays;
+
 public class Data {
 
     // 四种模式，顺序不能变，数据里面用到索引
@@ -388,13 +390,91 @@ public class Data {
     enum ECC_AND_BLOCKS_COLUMN {DC_TOTAL, ECC_PER_BLOCK, G1_BLOCKS_NUM, G1_DC_NUM, G2_BLOCKS_NUM, G2_DC_NUM};
 
     // pad 字节 
-    static final String[] PAD = {"11101100", "00010001"};
+    static final String PAD[] = {"11101100", "00010001"};
 
     // 模式指示器，顺序依次是(Numeric, Alpha, Byte, Kanji, ECI) 最后一个为混合模式 (ECI mode)
     static final String ModeIndicator[] = {"0001", "0010", "0100", "1000", "0111"}; 
 
+    
+
+    // 字符编码, 值分别是[0,44]
+    static final String CharCode = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:"; 
+    // 版本所需位 (第一项的0是后加的，为了索引和版本统一，1-40)
+    static final int VersionsRequiredRemainderBits[] = {0,0,7,7,7,7,7,0,0,0,0,0,0,0,3,3,3,3,3,3,3,4,4,4,4,4,4,4,3,3,3,3,3,3,3,0,0,0,0,0,0};
+
+    // function patterns 功能模式, 1 black, 2 white
+    // 查找模式 finder patterns
+    static final int FinderPatterns[][] = {
+        {1,1,1,1,1,1,1},
+        {1,0,0,0,0,0,1},
+        {1,0,1,1,1,0,1},
+        {1,0,1,1,1,0,1},
+        {1,0,1,1,1,0,1},
+        {1,0,0,0,0,0,1},
+        {1,1,1,1,1,1,1}
+    };
+    // 分隔符 Seperators
+    static final int SeperatorsRow[][] = {
+        {0,0,0,0,0,0,0,0}
+    };
+    static final int SeperatorsColumn[][] = {
+        {0},{0},{0},{0},{0},{0},{0},{0}
+    };
+    // 对齐模式 Alignment Patterns
+    static final int AlignmentPatterns[][] = {
+        {1,1,1,1,1},
+        {1,0,0,0,1},
+        {1,0,1,0,1},
+        {1,0,0,0,1},
+        {1,1,1,1,1},
+    };
+    // 对齐模式位置表 Alignment Pattern Locations
+    static final int AlignmentPatternLocations[][] = {
+        {}, {}, // version>=2才有对齐模式
+        {6,18}, // version = 2
+        {6,22},
+        {6,26},
+        {6,30},
+        {6,34},
+        {6,22,38},
+        {6,24,42},
+        {6,26,46},
+        {6,28,50},
+        {6,30,54},
+        {6,32,58},
+        {6,34,62},
+        {6,26,46,66},
+        {6,26,48,70},
+        {6,26,50,74},
+        {6,30,54,78},
+        {6,30,56,82},
+        {6,30,58,86},
+        {6,34,62,90},
+        {6,28,50,72,94},
+        {6,26,50,74,98},
+        {6,30,54,78,102},
+        {6,28,54,80,106},
+        {6,32,58,84,110},
+        {6,30,58,86,114},
+        {6,34,62,90,118},
+        {6,26,50,74,98,122},
+        {6,30,54,78,102,126},
+        {6,26,52,78,104,130},
+        {6,30,56,82,108,134},
+        {6,34,60,86,112,138},
+        {6,30,58,86,114,142},
+        {6,34,62,90,118,146},
+        {6,30,54,78,102,126,150},
+        {6,24,50,76,102,128,154},
+        {6,28,54,80,106,132,158},
+        {6,32,58,84,110,136,162},
+        {6,26,54,82,110,138,166},
+        {6,30,58,86,114,142,170},
+    };
+    
+
     /**
-     * 字符计数指示器
+     * 字符计数指示器，（将数据长度编码，不同版本下有不同的宽度）
      * @param version
      * @return
      */
@@ -410,8 +490,24 @@ public class Data {
         }
     }
 
-    // 字符编码, 值分别是[0,44]
-    static final String CharCode = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:"; 
-    // 版本所需位 (第一项的0是后加的，为了索引和版本统一，1-40)
-    static final int[] VersionsRequiredRemainderBits = {0,0,7,7,7,7,7,0,0,0,0,0,0,0,3,3,3,3,3,3,3,4,4,4,4,4,4,4,3,3,3,3,3,3,3,0,0,0,0,0,0};
+    // 各版本生成的图像大小（单位是模块）
+    static final int getSize(int version){
+        return ((version-1)*4)+21;
+    }
+
+    // 对齐模式生成的坐标
+    static int[][] AlignmentPatternPosition(int version){
+        int apl[] = Data.AlignmentPatternLocations[version];
+        System.out.println(Arrays.toString(apl));
+        int app[][] = new int[apl.length*apl.length][2];
+        int p=0;
+        for(int i=0; i<apl.length; i++){
+            for(int j=0; j<apl.length; j++){
+                app[p][0] = apl[i];
+                app[p][1] = apl[j]; 
+                p++;
+            }
+        }
+        return app;
+    }
 }
