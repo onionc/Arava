@@ -471,6 +471,11 @@ public class Data {
         {6,26,54,82,110,138,166},
         {6,30,58,86,114,142,170},
     };
+    // 格式信息区域
+    static final int FormatInformationArea[][] = {
+        {1,2,1,2,3}
+    };
+    // 版本区域
     
 
     /**

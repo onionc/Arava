@@ -205,7 +205,7 @@ public class Common {
     }
 
     /**
-     * 在二维数组data中，x,y位置开始写入数据 fillData
+     * 在二维数组data中的[x,y]位置开始填充数据 fillData
      * @param data
      * @param x
      * @param y
@@ -228,21 +228,25 @@ public class Common {
     }
 
     /**
-     * 在二维数组data中，x,y位置开始写入数据 fillData, 数据为-1才可以不写入
+     * 在二维数组data中的[x,y]位置开始填充数据 fillData, 包含数据验证
+     * 数据为-1才可以写入，或者要写入的块和原数据一致。否则原数组不变，返回false。
      * @param data
      * @param x
      * @param y
      * @param fillData
      */
     public static boolean setMatrixExcept(int data[][], int x, int y, int fillData[][]){
-        int temp[][] = data.clone();
+        int temp[][] = new int[data.length][];
+        for(int i=0; i<data.length; i++){
+            temp[i] = data[i].clone();
+        }
         
         end:
         for(int i=x; i<data.length; i++){
             for(int j=y; j<data[i].length; j++){
                 // fillData[i-x][j-y] 存在
                 if(i-x<fillData.length && j-y<fillData[i-x].length){
-                    if(data[i][j]!=-1) return false;
+                    if(data[i][j]!=-1 && data[i][j]!=fillData[i-x][j-y]) return false; // 当前位置为底色并且要填充的数据不一样，则退出。（如果和填充的数据一样，则没关系，可以覆盖）
                     temp[i][j] = fillData[i-x][j-y];
                 }else if(i-x>=fillData.length){
                     break end; // 跳过后续执行
@@ -252,9 +256,42 @@ public class Common {
             }
         }
         
-        data = temp.clone();
+        for(int i=0; i<data.length; i++){
+            data[i] = temp[i].clone();
+        }
 
         return true;
+    }
+
+    /**
+     * 通过字符串数组生成二维数组
+     * 每个字符串生成一维int数组，字符串数组则生成二维数组
+     * @param sA
+     * @return
+     */
+    public static int[][] genMatrixByStr(String sA[]){
+        int data[][] = new int[sA.length][];
+        for(int i=0; i<sA.length; i++){
+            data[i] = Common.strSplitToInt(sA[i], 1);
+        }
+        return data;
+    }
+
+    /**
+     * 通过行列和值生成二维数组
+     * @param x
+     * @param y
+     * @param v
+     * @return
+     */
+    public static int[][] genMatrix(int x, int y, int v2){
+        int data[][] = new int[x][y];
+        for(int i=0; i<x; i++){
+            for(int j=0; j<y; j++){
+                data[i][j] = v2;
+            }
+        }
+        return data;
     }
 
 }
@@ -317,6 +354,14 @@ class CommonTest{
         Common.setMatrix(data7, 0, 2, data8);
         System.out.println(Arrays.deepToString(data7)); // [[0, 0, 1, 2], [0, 0, 1, 5]]
 
+        // 通过字符串数组生成二维int数组
+        String data9[] = {"2222"};
+        System.out.println(Arrays.deepToString(Common.genMatrixByStr(data9)));
+        String data10[] = {"111", "122", "3"};
+        System.out.println(Arrays.deepToString(Common.genMatrixByStr(data10)));
+        // 通过行列信息生成二维数组
+        System.out.println(Arrays.deepToString(Common.genMatrix(10,1,2)));
+        System.out.println(Arrays.deepToString(Common.genMatrix(1,10,2)));
 
     }
 }

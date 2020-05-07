@@ -195,33 +195,81 @@ class QrCode{
             }
         }
 
-        // 添加查找模式 Finder patterns
+        // 添加查找模式 (Finder patterns)
         Common.setMatrix(this.dataMatrix, 0, 0, Data.FinderPatterns); // top-left
         Common.setMatrix(this.dataMatrix, 0, size-7, Data.FinderPatterns); // top-right
         Common.setMatrix(this.dataMatrix, size-7, 0, Data.FinderPatterns); // bottom-left
-        new Paint(300, Common.intToBoolInMatrix(this.dataMatrix), true).save("./image/a5.png");
-        
-        // 添加分隔符 Seperators
+        printImage("1FP");
+
+        // 添加分隔符 (Seperators)
         Common.setMatrix(this.dataMatrix, 7, 0, Data.SeperatorsRow);
         Common.setMatrix(this.dataMatrix, 0, 7, Data.SeperatorsColumn);
         Common.setMatrix(this.dataMatrix, 7, size-8, Data.SeperatorsRow);
         Common.setMatrix(this.dataMatrix, 0, size-8, Data.SeperatorsColumn);
         Common.setMatrix(this.dataMatrix, size-8, 0, Data.SeperatorsRow);
         Common.setMatrix(this.dataMatrix, size-8, 7, Data.SeperatorsColumn);
-
-
-
-        // 对齐模式 Alignment Patterns
-        int r[][] = Data.AlignmentPatternPosition(8);
-        for(int apl[]: r){
+        printImage("2S");
+        
+        // 添加对齐模式 (Alignment Patterns)
+        int apPosition[][] = Data.AlignmentPatternPosition(this.version);
+        for(int apl[]: apPosition){
             boolean b = Common.setMatrixExcept(this.dataMatrix, apl[0]-2, apl[1]-2, Data.AlignmentPatterns);
-            System.out.printf("x,y: %d %d %b\n", apl[0]-2, apl[1]-2, b);
+            // System.out.printf("x,y: %d %d %b\n", apl[0]-2, apl[1]-2, b);
+        }
+        printImage("3AP");
+
+        // 添加节奏模式 (Timing Patterns)
+        int tpRow[][] = new int[1][size-16];
+        int tpColumn[][] = new int[size-16][1];
+        for(int i=0; i<size-16; i++){
+            tpRow[0][i] = i%2==0 ? 1 : 0;
+            tpColumn[i][0] = i%2==0 ? 1 : 0;
+        }
+        Common.setMatrix(this.dataMatrix, 6, 8, tpRow);
+        Common.setMatrix(this.dataMatrix, 8, 6, tpColumn);
+        printImage("4TP");
+
+        // 添加dark模块和预留区域 (Dark Module and Reserved Areas)
+        // dark模块 [(4 * this.version) + 9, 8]
+        Common.setMatrix(this.dataMatrix,  4*this.version+9, 8, new int[][]{{1}});
+        printImage("501DM");
+        // 格式信息区域 (Format Information Area)
+        // 为了防止数据太分散，包含之前的数据
+        // 左上角的右侧和底部
+        int FIA01[][] = Common.genMatrix(1,9,2); //[2,2,2,2,2,2,1,2,2]
+        int FIA02[][] = Common.genMatrix(9,1,2); // [[2],...[1],[2],[2]]
+        FIA01[0][6] = 1;
+        FIA02[6][0] = 1;
+        Common.setMatrixExcept(this.dataMatrix, 8, 0, FIA01);
+        Common.setMatrixExcept(this.dataMatrix, 0, 8, FIA02);
+        // 右上角的底部
+        int FIA03[][] = Common.genMatrix(1,9,2);
+        Common.setMatrixExcept(this.dataMatrix, 8, this.version*4+9, FIA03);
+        // 左下角的右侧
+        int FIA04[][] = Common.genMatrix(8,1,2);
+        Common.setMatrixExcept(this.dataMatrix, 4*this.version+10, 8, FIA04);
+        // 版本信息区域 （Version Information Area）
+        if(this.version>=7){
+            int VIA01[][] = Common.genMatrix(6, 3, 3);
+            int VIA02[][] = Common.genMatrix(3, 6, 3);
+            Common.setMatrixExcept(this.dataMatrix, 0, 4*this.version+6, VIA01);
+            Common.setMatrixExcept(this.dataMatrix, 4*this.version+6, 0, VIA02);
+
         }
 
-        new Paint(300, Common.intToBoolInMatrix(this.dataMatrix), true).save("./image/a6.png");
+        printImage("502FIA");
 
-        //System.out.println(Arrays.deepToString(this.dataMatrix));
     }
+
+    /**
+     * 打印图片，用来测试
+     * @param name
+     */
+    private void printImage(String name){
+        // new Paint(300, Common.intToBoolInMatrix(this.dataMatrix)).save("./image/2version"+this.version+"_"+name+".jpg");
+        new Paint(300, this.dataMatrix).save("./image/version"+this.version+"_"+name+".jpg");
+    }
+
     /**
      * 输出二维码基本信息
      */
