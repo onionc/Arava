@@ -44,6 +44,7 @@ class QrCode{
 
         // 模块在矩阵中的位置 （包含数据信息和功能模块）
         modulePlacementInMatrix();
+        
         // System.out.println(this.message);
         
     }
@@ -185,7 +186,7 @@ class QrCode{
      * 
      */
     protected void modulePlacementInMatrix(){
-        this.version=8;
+        
         int size = Data.getSize(this.version);
         // 初始化
         this.dataMatrix = new int[size][size];
@@ -256,8 +257,57 @@ class QrCode{
             Common.setMatrixExcept(this.dataMatrix, 4*this.version+6, 0, VIA02);
 
         }
-
         printImage("502FIA");
+        // 添加数据信息
+        addDataBitsToMatrix();
+        printImage("6data");
+    }
+
+    /**
+     * 添加数据到图像中
+     */
+    private void addDataBitsToMatrix(){
+        int i=0; // 数据索引
+        int messageArr[] = Common.strSplitToInt(this.message, 1);
+
+        int column = this.dataMatrix.length-1;
+        int row = this.dataMatrix.length-1;
+
+        // up=true 向上填充，=false 向下填充
+        boolean up = true;
+        // 结束条件：数据填充完毕或者列遍历完
+        while(i<messageArr.length-1 && column>=0){
+            
+            // 跳过 timing patterns 列
+            if(column==6)
+                column--;
+            // 每次写两个数据
+            if(row>=0 && column>=0){
+                if(this.dataMatrix[row][column]==-1){
+                    this.dataMatrix[row][column] = messageArr[i++];
+                }
+                if(this.dataMatrix[row][column-1]==-1){
+                    this.dataMatrix[row][column-1] = messageArr[i++];
+                }
+            }
+
+            // 向上填充模式，每次row--；向下填充模式，每次row++。到达边界，重置row，并!up。
+            if(up){
+                if(row--==0){ // 每次处理后，行-1，
+                    row++; //row=0;
+                    column-=2;
+                    up=!up;
+                }
+
+            }else{
+                if(row++==this.dataMatrix.length-1){
+                    row--; //row = this.dataMatrix.length-1;
+                    column-=2;
+                    up=!up;
+                }
+            }
+            
+        }
 
     }
 
@@ -266,7 +316,6 @@ class QrCode{
      * @param name
      */
     private void printImage(String name){
-        // new Paint(300, Common.intToBoolInMatrix(this.dataMatrix)).save("./image/2version"+this.version+"_"+name+".jpg");
         new Paint(300, this.dataMatrix).save("./image/version"+this.version+"_"+name+".jpg");
     }
 
