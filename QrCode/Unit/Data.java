@@ -471,11 +471,20 @@ public class Data {
         {6,26,54,82,110,138,166},
         {6,30,58,86,114,142,170},
     };
-    // 格式信息区域
-    static final int FormatInformationArea[][] = {
-        {1,2,1,2,3}
-    };
-    // 版本区域
+    
+    // 掩码
+    interface MaskingService{
+        boolean check(int row, int column);
+    }
+    static MaskingService mask1 = (int row, int column) -> (row + column) % 2 == 0;
+    static MaskingService mask2 = (int row, int column) -> (row) % 2 == 0;
+    static MaskingService mask3 = (int row, int column) -> (column) % 3 == 0;
+    static MaskingService mask4 = (int row, int column) -> (row + column) % 3 == 0;
+    static MaskingService mask5 = (int row, int column) -> ( (row / 2) + (column / 3) ) % 2 == 0;
+    static MaskingService mask6 = (int row, int column) -> ((row * column) % 2) + ((row * column) % 3) == 0;
+    static MaskingService mask7 = (int row, int column) -> ( ((row * column) % 2) + ((row * column) % 3) ) % 2 == 0;
+    static MaskingService mask8 = (int row, int column) -> ( ((row + column) % 2) + ((row * column) % 3) ) % 2 == 0;
+    static MaskingService masking[] = {mask1, mask2, mask3, mask4, mask5, mask6, mask7, mask8};
     
 
     /**

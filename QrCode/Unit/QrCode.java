@@ -45,6 +45,8 @@ class QrCode{
         // 模块在矩阵中的位置 （包含数据信息和功能模块）
         modulePlacementInMatrix();
         
+        // 数据掩码
+        dataMasking();
         // System.out.println(this.message);
         
     }
@@ -284,10 +286,10 @@ class QrCode{
             // 每次写两个数据
             if(row>=0 && column>=0){
                 if(this.dataMatrix[row][column]==-1){
-                    this.dataMatrix[row][column] = messageArr[i++];
+                    this.dataMatrix[row][column] = messageArr[i++]+4;
                 }
                 if(this.dataMatrix[row][column-1]==-1){
-                    this.dataMatrix[row][column-1] = messageArr[i++];
+                    this.dataMatrix[row][column-1] = messageArr[i++]+4;
                 }
             }
 
@@ -312,11 +314,55 @@ class QrCode{
     }
 
     /**
+     * 数据掩码
+     */
+    protected void dataMasking(){
+        // 八种掩码 测试
+        testEightMasking();
+        // 确定掩码模式
+
+        // 添加掩码
+
+    }
+
+    /**
+     * 测试八种掩码
+     */
+    private void testEightMasking(){
+        
+        for(int i=0; i<Data.masking.length; i++){
+            int dataTemp[][] = new int[this.dataMatrix.length][this.dataMatrix.length];
+            for(int di=0; di<this.dataMatrix.length; di++){
+                for(int dj=0; dj<this.dataMatrix.length; dj++){
+                    if(this.dataMatrix[di][dj]!=4 && this.dataMatrix[di][dj]!=5){
+                        dataTemp[di][dj] = this.dataMatrix[di][dj];
+                    }else{
+                        // System.out.printf("%d %d %d %b\n", i, di, dj, Data.masking[i].check(di, dj));
+                        if(Data.masking[i].check(di, dj)){
+                            dataTemp[di][dj] = this.dataMatrix[di][dj]^1; 
+                        }
+                    }
+                }
+            }
+            printImage("70mask_"+i,dataTemp);
+        }
+    }
+    /**
+     * 惩罚分数
+     */
+    private void evaluationPunishScore(){
+
+    }
+
+    /**
      * 打印图片，用来测试
      * @param name
      */
     private void printImage(String name){
         new Paint(300, this.dataMatrix).save("./image/version"+this.version+"_"+name+".jpg");
+    }
+    private void printImage(String name, int data[][]){
+        new Paint(300, data).save("./image/version"+this.version+"_"+name+".jpg");
     }
 
     /**

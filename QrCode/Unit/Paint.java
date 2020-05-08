@@ -7,6 +7,8 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import javax.imageio.ImageIO;
 
+import org.w3c.dom.css.RGBColor;
+
 /**
  * 画图
  */
@@ -60,13 +62,16 @@ public class Paint {
      * 多色彩绘制
      * 数据中的 -1,0,1 （分别是 灰白黑）。 -1是灰底，白和黑是二维码绘制，其他颜色是中途调试。 
      * 2 是蓝色，代表格式信息区域，3是红色，代表版本信息
+     * 4,5 代表数据模块中的0,1
+     * 使用时候+1
      * @param data
      * @param times
      */
     public Paint(int data[][], int times){
-        // 颜色 
+        // 颜色 真实数据从-1开始，使用+1对应颜色模式
         Color color[] = {
-            Color.GRAY, Color.WHITE, Color.BLACK, Color.BLUE, Color.RED
+            Color.GRAY, Color.WHITE, Color.BLACK, Color.BLUE, Color.RED,
+            new Color(0xDC,0xDC,0xDC), new Color(0x2f,0x4f,0x4f)
         };
         
 
