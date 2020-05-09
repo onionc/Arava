@@ -229,14 +229,20 @@ public class PolynomialGF{
 
     /**
      * 返回系数
+     * 注：序数为0的也返回。比如 156x^{6}+46x^{4}+15x^{3}+180x^{2}+122x+16 应该生成 [156, 0, 46, 15, 180, 122, 16] 而不是 [156, 46, 15, 180, 122, 16]
      */
-    public int[] getCoefs(){
-        int[] r = new int[this.poly.size()];
+    public int[] getCoefs(int xn){
+        int[] r = new int[xn];
         int i = 0;
 
         this.iter = this.poly.iterator();
         while(this.iter.hasNext()){
-            r[i++] = this.iter.next().coef.value;
+            Node t = this.iter.next();
+            while(t.expn < xn-i-1){
+                r[i++] = 0;
+            }
+            r[i++] = t.coef.value;
+
         }
         return r;
     }

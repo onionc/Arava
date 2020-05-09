@@ -10,7 +10,7 @@ public class ErrorCorrectionCoding{
         // 数据码 和 纠错码数
         int [] codeWords = {32, 91, 11, 120, 209, 114, 220, 77, 67, 64, 236, 17, 236, 17, 236, 17};
         int e_n = 10;
-
+        
         // 消息多项式
         PolynomialGF mp = new ErrorCorrectionCoding().messagePolynomial(codeWords);
         System.out.println(mp); // +α^{5}x^{15}+α^{92}x^{14}+α^{238}x^{13}+α^{78}x^{12}+α^{161}x^{11}+α^{155}x^{10}+α^{187}x^{9}+α^{145}x^{8}+α^{98}x^{7}+α^{6}x^{6}+α^{122}x^{5}+α^{100}x^{4}+α^{122}x^{3}+α^{100}x^{2}+α^{122}x+α^{100}
@@ -32,11 +32,13 @@ public class ErrorCorrectionCoding{
         System.out.println(remainder); // +196x^{9}+35x^{8}+39x^{7}+119x^{6}+235x^{5}+215x^{4}+231x^{3}+226x^{2}+93x+23
 
         System.out.println("纠错码为：");
-        int[] e = remainder.getCoefs();
+        int[] e = remainder.getCoefs(e_n);
         System.out.println(Arrays.toString(e)); // [196, 35, 39, 119, 235, 215, 231, 226, 93, 23]
         
         // 封装后
-        System.out.println(Arrays.toString(getCode(codeWords, e_n)));
+        int codeWords2[] = {32, 91, 11, 120, 209, 114, 220, 77, 67, 64, 236, 17, 236};
+        int e_n2=13;
+        System.out.println(Arrays.toString(getCode(codeWords2, e_n2)));
     }
 
     /**
@@ -109,7 +111,7 @@ public class ErrorCorrectionCoding{
         Log.getLogger().info("余数: " + remainder);
 
         // 纠错码
-        int[] e = remainder.getCoefs();
+        int[] e = remainder.getCoefs(eNum);
         Log.getLogger().info("纠错码: " + Arrays.toString(e));
 
         return e;

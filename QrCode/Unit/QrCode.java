@@ -159,13 +159,10 @@ class QrCode{
         for(int i=0; i<this.dataCodewords.length; i++){
             ecc[i] = ErrorCorrectionCoding.getCode(this.dataCodewords[i], Data.ECC_AND_BLOCKS[this.eccAndBlocksIndex()][Data.ECC_AND_BLOCKS_COLUMN.ECC_PER_BLOCK.ordinal()]);
         }
-
         // 交错纠错码
         int[] iEcc = Common.interleaveData(ecc);
-
         // 数据码和交错码拼接
         int[] messageArr = Common.joinArr(iDc, iEcc);
-
         // 转为二进制
         StringBuffer message = new StringBuffer();
         for(int i : messageArr){
@@ -340,6 +337,8 @@ class QrCode{
                         // System.out.printf("%d %d %d %b\n", i, di, dj, Data.masking[i].check(di, dj));
                         if(Data.masking[i].check(di, dj)){
                             dataTemp[di][dj] = this.dataMatrix[di][dj]^1; 
+                        }else{
+                            dataTemp[di][dj] = this.dataMatrix[di][dj]; 
                         }
                     }
                 }
@@ -370,9 +369,9 @@ class QrCode{
      */
     public void info(){
         System.out.printf("length=%d, mode=%s, level=%s, version=%d\ncode encoding: %s\n" + 
-            "data codewords: %s\nfinal message: %s\n", 
+            "data codewords: %s\nfinal message(%d): %s\n", 
             this.dataLen, this.mode.name(), this.level.name(), this.version, this.dataEncodeStr,
-            Arrays.deepToString(this.dataCodewords), this.message
+            Arrays.deepToString(this.dataCodewords), this.message.length(), this.message
         );
     }
 }
@@ -400,6 +399,7 @@ class QrCodeTest{
         */
 
         new QrCode("HELLO WORLD", Data.LEVEL.M).info();
+        //new QrCode("HELLO WORLD", Data.LEVEL.Q).info();
     }
 
 }

@@ -512,7 +512,6 @@ public class Data {
     // 对齐模式生成的坐标
     static int[][] AlignmentPatternPosition(int version){
         int apl[] = Data.AlignmentPatternLocations[version];
-        System.out.println(Arrays.toString(apl));
         int app[][] = new int[apl.length*apl.length][2];
         int p=0;
         for(int i=0; i<apl.length; i++){
