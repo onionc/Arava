@@ -42,12 +42,22 @@ class QrCode{
         // 生成最终的数据字符串
         structFinalMessage();
 
-        // 模块在矩阵中的位置 （包含数据信息和功能模块）
-        modulePlacementInMatrix();
+        // 填充功能模块信息
+        addFunctionPatternToMatrix();
         
-        // 数据掩码
+        // 填充版本信息
+        addVersionToMatrix();
+        printImage("60version");
+        // 填充数据信息
+         addDataBitsToMatrix();
+         printImage("70data");
+        
+
+        // 数据掩码，格式信息也在此填充
         dataMasking();
         // System.out.println(this.message);
+
+        
         
     }
 
@@ -179,12 +189,12 @@ class QrCode{
     }
 
     /**
-     * 模块在矩阵中的位置 （包含数据信息和功能模块）
+     * 填充功能模块
      * 模块和像素有区别：二维码中的黑白块都是模块，绘制的时候一个块可能占用了多个像素
      * 功能模式是二维码规范要求的二维码非数据元素，如二维码矩阵四角的三种查找模式
      * 
      */
-    protected void modulePlacementInMatrix(){
+    protected void addFunctionPatternToMatrix(){
         
         int size = Data.getSize(this.version);
         // 初始化
@@ -199,7 +209,7 @@ class QrCode{
         Common.setMatrix(this.dataMatrix, 0, 0, Data.FinderPatterns); // top-left
         Common.setMatrix(this.dataMatrix, 0, size-7, Data.FinderPatterns); // top-right
         Common.setMatrix(this.dataMatrix, size-7, 0, Data.FinderPatterns); // bottom-left
-        printImage("1FP");
+        printImage("10FP");
 
         // 添加分隔符 (Seperators)
         Common.setMatrix(this.dataMatrix, 7, 0, Data.SeperatorsRow);
@@ -208,7 +218,7 @@ class QrCode{
         Common.setMatrix(this.dataMatrix, 0, size-8, Data.SeperatorsColumn);
         Common.setMatrix(this.dataMatrix, size-8, 0, Data.SeperatorsRow);
         Common.setMatrix(this.dataMatrix, size-8, 7, Data.SeperatorsColumn);
-        printImage("2S");
+        printImage("20S");
         
         // 添加对齐模式 (Alignment Patterns)
         int apPosition[][] = Data.AlignmentPatternPosition(this.version);
@@ -216,7 +226,7 @@ class QrCode{
             boolean b = Common.setMatrixExcept(this.dataMatrix, apl[0]-2, apl[1]-2, Data.AlignmentPatterns);
             // System.out.printf("x,y: %d %d %b\n", apl[0]-2, apl[1]-2, b);
         }
-        printImage("3AP");
+        printImage("30AP");
 
         // 添加节奏模式 (Timing Patterns)
         int tpRow[][] = new int[1][size-16];
@@ -227,27 +237,29 @@ class QrCode{
         }
         Common.setMatrix(this.dataMatrix, 6, 8, tpRow);
         Common.setMatrix(this.dataMatrix, 8, 6, tpColumn);
-        printImage("4TP");
+        printImage("40TP");
 
         // 添加dark模块和预留区域 (Dark Module and Reserved Areas)
         // dark模块 [(4 * this.version) + 9, 8]
         Common.setMatrix(this.dataMatrix,  4*this.version+9, 8, new int[][]{{1}});
-        printImage("501DM");
+        printImage("50DM");
         // 格式信息区域 (Format Information Area)
+        
         // 为了防止数据太分散，包含之前的数据
-        // 左上角的右侧和底部
+        // 左上角的底部和右侧
         int FIA01[][] = Common.genMatrix(1,9,2); //[2,2,2,2,2,2,1,2,2]
         int FIA02[][] = Common.genMatrix(9,1,2); // [[2],...[1],[2],[2]]
         FIA01[0][6] = 1;
         FIA02[6][0] = 1;
         Common.setMatrixExcept(this.dataMatrix, 8, 0, FIA01);
         Common.setMatrixExcept(this.dataMatrix, 0, 8, FIA02);
-        // 右上角的底部
+        // // 右上角的底部
         int FIA03[][] = Common.genMatrix(1,9,2);
         Common.setMatrixExcept(this.dataMatrix, 8, this.version*4+9, FIA03);
         // 左下角的右侧
         int FIA04[][] = Common.genMatrix(8,1,2);
         Common.setMatrixExcept(this.dataMatrix, 4*this.version+10, 8, FIA04);
+        
         // 版本信息区域 （Version Information Area）
         if(this.version>=7){
             int VIA01[][] = Common.genMatrix(6, 3, 3);
@@ -256,12 +268,11 @@ class QrCode{
             Common.setMatrixExcept(this.dataMatrix, 4*this.version+6, 0, VIA02);
 
         }
-        printImage("502FIA");
-        // 添加数据信息
-        addDataBitsToMatrix();
-        printImage("6data");
+        printImage("51FIA");
+        
     }
 
+   
     /**
      * 添加数据到图像中
      */
@@ -276,7 +287,6 @@ class QrCode{
         boolean up = true;
         // 结束条件：数据填充完毕或者列遍历完
         while(i<messageArr.length-1 && column>=0){
-            
             // 跳过 timing patterns 列
             if(column==6)
                 column--;
@@ -305,10 +315,65 @@ class QrCode{
                     up=!up;
                 }
             }
+        }
+    }
+
+    /**
+     * 填充版本信息
+     */
+    protected void addVersionToMatrix(){
+        // 填充版本信息
+        if(this.version>=7 && this.version<=40){
+            String vis = Data.VersionInformations[this.version-7];
+            System.out.println(vis);
+            String visReverse = new StringBuilder(vis).reverse().toString();
+            int a1[][] = Common.ascendToArr(Common.strSplitToInt(visReverse, 1), 3, 6, false);
+            int a2[][] = Common.ascendToArr(Common.strSplitToInt(visReverse, 1), 6, 3, true);
             
+            Common.setMatrix(this.dataMatrix, 0, 4*this.version+6, a2);
+            Common.setMatrix(this.dataMatrix, 4*this.version+6, 0, a1);
+        }
+    }
+
+    /**
+     * 填充格式信息
+     * 
+     */
+    protected void addFormatToMatrix(int mask, int dataM[][]){
+        // 格式信息包含 错误级别和蒙版模式，共4*8=32种
+        if(mask<0 || mask>7){
+            return ;
         }
 
+        String fis = Data.getFormatInformations(this.level.ordinal(), mask);
+
+        if(fis.length()!=15){
+            return;
+        }
+        // 左上角底部，左上角右侧，左下角右侧，右上角底部
+        int LT_bottom[][] = {Common.strSplitToInt(fis.substring(0, 6)+"1"+fis.substring(6, 8), 1)};
+        int LT_right[][] = new int[8][1];
+        int LB_right[][] = new int[7][1];
+        int RT_bottom[][] = {Common.strSplitToInt(fis.substring(7, 15), 1)};
+
+        // 竖直的两条数据，反向
+        String t = fis.charAt(8)+"1"+fis.substring(9, 15);
+        for(int i=0; i<LT_right.length; i++){
+            LT_right[i][0] = t.charAt(LT_right.length-i-1)=='0'?0:1;
+        }
+        t = fis.substring(0, 7);
+        for(int i=0; i<LB_right.length; i++){
+            LB_right[i][0] =  t.charAt(LB_right.length-i-1)=='0'?0:1;
+        }
+
+        Common.setMatrix(dataM, 8, 0, LT_bottom);
+        Common.setMatrix(dataM, 0, 8, LT_right);
+        Common.setMatrix(dataM, 4*this.version+10, 8, LB_right);
+        Common.setMatrix(dataM, 8, this.version*4+9, RT_bottom);
+        //System.out.println("mask:" + mask);
+         //printImage("90fis_"+mask);
     }
+
 
     /**
      * 数据掩码
@@ -316,8 +381,7 @@ class QrCode{
     protected void dataMasking(){
         // 八种掩码 测试
         testEightMasking();
-        // 确定掩码模式
-
+        // 计算惩罚分数
         // 添加掩码
 
     }
@@ -343,13 +407,16 @@ class QrCode{
                     }
                 }
             }
-            printImage("70mask_"+i,dataTemp);
+            // 填充格式信息
+            addFormatToMatrix(i, dataTemp);
+            printImage("80mask_"+i,dataTemp);
         }
     }
+
     /**
-     * 惩罚分数
+     * 评估掩码
      */
-    private void evaluationPunishScore(){
+    private void evaluationMaskPattern(){
 
     }
 
@@ -398,8 +465,8 @@ class QrCodeTest{
         new QrCode("HELLO WORLD", Data.LEVEL.M).info(); // 00100000010110110000101101111000110100010111001011011100010011010100001101000000111011000001000111101100000100011110110000010001
         */
 
-        new QrCode("HELLO WORLD", Data.LEVEL.M).info();
-        //new QrCode("HELLO WORLD", Data.LEVEL.Q).info();
+        //new QrCode("HELLO WORLD", Data.LEVEL.M).info();
+        new QrCode("HELLO WORLD", Data.LEVEL.Q).info();
     }
 
 }

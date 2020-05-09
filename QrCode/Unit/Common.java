@@ -171,6 +171,38 @@ public class Common {
     }
 
     /**
+     * 一维数组升维到二维
+     * @param sourceData
+     * @param row
+     * @param column
+     * @param priorityRow 优先模式：true 行优先, false 列优先
+     * @return
+     */
+    public static int[][] ascendToArr(int sourceData[], int row, int column, boolean priorityRow){
+        int data[][] = new int[row][column];
+        int si = 0;
+        if(priorityRow){
+            for(int i=0; i<row; i++){
+                for(int j=0; j<column; j++){
+                    if(si<sourceData.length){
+                        data[i][j] = sourceData[si++];
+                    }
+                }
+            }
+        }else{
+            for(int i=0; i<column; i++){
+                for(int j=0; j<row; j++){
+                    if(si<sourceData.length){
+                        data[j][i] = sourceData[si++];
+                    }
+                }
+            }
+        }
+        
+        return data;
+    } 
+
+    /**
      * 合并（拼接）两个数组
      * @param a
      * @param b
@@ -356,12 +388,16 @@ class CommonTest{
 
         // 通过字符串数组生成二维int数组
         String data9[] = {"2222"};
-        System.out.println(Arrays.deepToString(Common.genMatrixByStr(data9)));
+        System.out.println(Arrays.deepToString(Common.genMatrixByStr(data9))); // [[2, 2, 2, 2]]
         String data10[] = {"111", "122", "3"};
-        System.out.println(Arrays.deepToString(Common.genMatrixByStr(data10)));
+        System.out.println(Arrays.deepToString(Common.genMatrixByStr(data10))); // [[1, 1, 1], [1, 2, 2], [3]]
         // 通过行列信息生成二维数组
-        System.out.println(Arrays.deepToString(Common.genMatrix(10,1,2)));
-        System.out.println(Arrays.deepToString(Common.genMatrix(1,10,2)));
+        System.out.println(Arrays.deepToString(Common.genMatrix(10,1,2))); // [[2], [2], [2], [2], [2], [2], [2], [2], [2], [2]]
+        System.out.println(Arrays.deepToString(Common.genMatrix(1,10,2))); // [[2, 2, 2, 2, 2, 2, 2, 2, 2, 2]]
 
+        // 一维数组升维到二维
+        int data11[] = {1,2,3,4,5,6,7,8,9};
+        System.out.println(Arrays.deepToString(Common.ascendToArr(data11, 3, 4, false))); // [[1, 4, 7, 0], [2, 5, 8, 0], [3, 6, 9, 0]]
+        
     }
 }
