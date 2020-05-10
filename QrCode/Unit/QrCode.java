@@ -381,8 +381,7 @@ class QrCode{
     protected void dataMasking(){
         // 八种掩码 测试
         testEightMasking();
-        // 计算惩罚分数
-        // 添加掩码
+        // 计算惩罚分数并添加掩码
 
     }
 
@@ -399,10 +398,11 @@ class QrCode{
                         dataTemp[di][dj] = this.dataMatrix[di][dj];
                     }else{
                         // System.out.printf("%d %d %d %b\n", i, di, dj, Data.masking[i].check(di, dj));
+                        // 下面不-4，数据的黑白块则是用其他颜色代替。-4则变黑白
                         if(Data.masking[i].check(di, dj)){
-                            dataTemp[di][dj] = this.dataMatrix[di][dj]^1; 
+                            dataTemp[di][dj] = (this.dataMatrix[di][dj]^1)-4; 
                         }else{
-                            dataTemp[di][dj] = this.dataMatrix[di][dj]; 
+                            dataTemp[di][dj] = this.dataMatrix[di][dj]-4; 
                         }
                     }
                 }
@@ -410,14 +410,47 @@ class QrCode{
             // 填充格式信息
             addFormatToMatrix(i, dataTemp);
             printImage("80mask_"+i,dataTemp);
+
+            // 评估掩码，计算惩罚分数
+            int score = evaluationMaskPattern(dataTemp);
+            System.out.printf("masking penalty scores: %d %d\n",i, score);
+            break;
         }
     }
 
     /**
-     * 评估掩码
+     * 评估掩码，计算惩罚分数
+     * @param data
+     * @return
      */
-    private void evaluationMaskPattern(){
-
+    private int evaluationMaskPattern(int data[][]){
+        printImage("test_",data);
+        int score = 0;
+        // 1. 第一个惩罚规则是，每一行(或一列)中有5个或更多相同颜色的模块 +3分，大于5个，继续每个+1分
+        int num=0;
+        int prev = 1; //1 黑，0白
+        for(int i=0; i<data.length; i++){
+            
+            for(int j=0; j<data[i].length; j++){
+                if(prev == data[i][j]){
+                    num++;
+                }else{
+                    if(num>=5){
+                        score += (num-2); // 3+(num-5)
+                    }
+                    prev = data[i][j];
+                    num=1;
+                }
+                //System.out.printf("%d,%d prev:%d num:%d score:%d\n", i,j,prev,num,score);
+            }
+            if(num>=5){
+                score +=( num-2);
+            }
+            num=0;
+            System.out.printf("%d %d\n", i,score);
+        }
+        return 0;
+        
     }
 
     /**
