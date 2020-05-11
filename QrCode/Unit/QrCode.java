@@ -428,10 +428,13 @@ class QrCode{
         int score = 0;
         // 1. 第一个惩罚规则是，每一行(或一列)中有5个或更多相同颜色的模块 +3分，大于5个，继续每个+1分
         int num=0;
+        
         int prev = 1; //1 黑，0白
+        // 列的计算
+        int cNum=0;
+        int cPrev=1;
         for(int i=0; i<data.length; i++){
-            
-            for(int j=0; j<data[i].length; j++){
+            for(int j=0; j<data.length; j++){
                 if(prev == data[i][j]){
                     num++;
                 }else{
@@ -441,16 +444,69 @@ class QrCode{
                     prev = data[i][j];
                     num=1;
                 }
-                //System.out.printf("%d,%d prev:%d num:%d score:%d\n", i,j,prev,num,score);
+
+                if(cPrev == data[j][i]){
+                    cNum++;
+                }else{
+                    if(cNum>=5){
+                        score += (cNum-2);
+                    }
+                    cPrev = data[j][i];
+                    cNum=1;
+                }
             }
             if(num>=5){
                 score +=( num-2);
             }
-            num=0;
-            System.out.printf("%d %d\n", i,score);
+            if(cNum>=5){
+                score +=( cNum-2);
+            }
+            num=cNum=0;
+            
+        }
+        System.out.printf("1: %d\n",score);
+        // 2. 第二个规则是计算 2*2 的模块，每个3分
+        num=0;
+        // int data2[][] = new int[data.length][data.length]; // 用来输出测试
+        for(int i=0; i<data.length-1; i++){
+            for(int j=0; j<data.length-1; j++){
+                if(data[i][j]==data[i][j+1] 
+                    && data[i][j]==data[i+1][j]
+                    && data[i][j]==data[i+1][j+1]
+                ){
+                    // data2[i][j]=1;
+                    num++;
+                }
+            }
+            
+        }
+        //printImage("rule2", data2);
+        score += num*3;
+        System.out.printf("2: %d\n",score);
+
+        // 3. 第三个规则，找到两个特殊模式集合 Data.EvaluationRule3
+        int data2[][] = new int[data.length][data.length]; // 用来输出测试
+        int rule3[] = Data.EvaluationRule3;
+        for(int i=0; i<data.length; i++){
+            for(int j=0; j<data.length; j++){
+                // 横条
+                int r3=0, tj=j;
+                for(; r3<rule3.length; r3++){
+                    if(j>=data.length-rule3.length){
+                        break;
+                    }
+                    if(data[i][tj++] != rule3[r3]){
+                        break;
+                    }
+                }
+                System.out.printf("rule3--: %d %d %d\n",i,j,r3);
+                if(r3==rule3.length-1){
+                    score += 30;
+                    System.out.printf("rule3: %d %d %d",i,j,tj);
+                }
+            }
         }
         return 0;
-        
     }
 
     /**
@@ -477,7 +533,6 @@ class QrCode{
 }
 
 
-
 class QrCodeTest{
     public static void main (String[] args) throws Exception
 	{
@@ -498,8 +553,13 @@ class QrCodeTest{
         new QrCode("HELLO WORLD", Data.LEVEL.M).info(); // 00100000010110110000101101111000110100010111001011011100010011010100001101000000111011000001000111101100000100011110110000010001
         */
 
-        //new QrCode("HELLO WORLD", Data.LEVEL.M).info();
+        // 验证生成的是否正确
+        // https://www.thonky.com/qrcode/?advopt=1#qr-container thonky的生成器，关于HELLO WORLD,和生成是一致的，所以教程中https://www.thonky.com/qr-code-tutorial/data-masking的掩码图片有误。
+        // 中文生成，织梦下的 http://2v.dedecms.com/ 默认使用了 纠错级别L，掩码0。不是最优的掩码。可对比图案一样。
         new QrCode("HELLO WORLD", Data.LEVEL.Q).info();
+        //new QrCode("中国", Data.LEVEL.L).info();
+
+        
     }
 
 }
