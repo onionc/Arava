@@ -23,6 +23,9 @@ class QrCode{
     String message;
     // 矩阵
     int dataMatrix[][];
+    // 掩码模式
+    int maskPattern;
+
 
     private int eccAndBlocksIndex() {
         int index = (this.version-1)*4 + this.level.ordinal();
@@ -49,16 +52,15 @@ class QrCode{
         addVersionToMatrix();
         printImage("60version");
         // 填充数据信息
-         addDataBitsToMatrix();
-         printImage("70data");
-        
+        addDataBitsToMatrix();
+        printImage("70data");
 
         // 数据掩码，格式信息也在此填充
         dataMasking();
-        // System.out.println(this.message);
+        
+        // 生成数据图片
+        printImage(String.format("%s_%s_%d_final", this.level.name(), this.mode.name(), this.maskPattern).toString());
 
-        
-        
     }
 
     public QrCode(String data) throws Exception{
@@ -377,20 +379,12 @@ class QrCode{
 
     /**
      * 数据掩码
+     * 填充格式信息，计算惩罚分数，添加最优的掩码
      */
-    protected void dataMasking(){
-        // 八种掩码 测试
-        testEightMasking();
-        // 计算惩罚分数并添加掩码
-
-    }
-
-    /**
-     * 测试八种掩码
-     */
-    private void testEightMasking(){
+    private void dataMasking(){
         int finalMask = -1;
         int finalScore = 10000;
+        int data[][] = new int[this.dataMatrix.length][];
         for(int i=0; i<Data.masking.length; i++){
             int dataTemp[][] = new int[this.dataMatrix.length][this.dataMatrix.length];
             for(int di=0; di<this.dataMatrix.length; di++){
@@ -414,14 +408,21 @@ class QrCode{
 
             // 评估掩码，计算惩罚分数
             int score = evaluationMaskPattern(dataTemp);
-            //System.out.printf("masking penalty scores: %d %d\n",i, score);
-            //break;
+            
+            // 最优
             if(score<finalScore){
                 finalScore = score;
                 finalMask = i;
+
+                for(int m=0; m<data.length; m++){
+                    data[m] = dataTemp[m].clone();
+                }
             }
         }
-        System.out.printf("masking penalty scores: -- %d %d\n",finalMask, finalScore);
+        this.maskPattern = finalMask;
+        this.dataMatrix = data;
+        // System.out.printf("masking penalty scores: %d %d\n",finalMask, finalScore);
+        
     }
 
     /**
