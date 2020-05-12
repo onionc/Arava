@@ -495,6 +495,7 @@ public class Data {
     
     // 惩罚评估规则 3
     static int EvaluationRule3[] = {1,0,1,1,1,0,1,0,0,0,0};
+    static int EvaluationRule3r[] = {0,0,0,0,1,0,1,1,1,0,1};
 
     /**
      * 字符计数指示器，（将数据长度编码，不同版本下有不同的宽度）

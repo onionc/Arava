@@ -389,7 +389,8 @@ class QrCode{
      * 测试八种掩码
      */
     private void testEightMasking(){
-        
+        int finalMask = -1;
+        int finalScore = 10000;
         for(int i=0; i<Data.masking.length; i++){
             int dataTemp[][] = new int[this.dataMatrix.length][this.dataMatrix.length];
             for(int di=0; di<this.dataMatrix.length; di++){
@@ -413,9 +414,14 @@ class QrCode{
 
             // 评估掩码，计算惩罚分数
             int score = evaluationMaskPattern(dataTemp);
-            System.out.printf("masking penalty scores: %d %d\n",i, score);
-            break;
+            //System.out.printf("masking penalty scores: %d %d\n",i, score);
+            //break;
+            if(score<finalScore){
+                finalScore = score;
+                finalMask = i;
+            }
         }
+        System.out.printf("masking penalty scores: -- %d %d\n",finalMask, finalScore);
     }
 
     /**
@@ -424,11 +430,10 @@ class QrCode{
      * @return
      */
     private int evaluationMaskPattern(int data[][]){
-        printImage("test_",data);
+        
         int score = 0;
         // 1. 第一个惩罚规则是，每一行(或一列)中有5个或更多相同颜色的模块 +3分，大于5个，继续每个+1分
         int num=0;
-        
         int prev = 1; //1 黑，0白
         // 列的计算
         int cNum=0;
@@ -464,7 +469,7 @@ class QrCode{
             num=cNum=0;
             
         }
-        System.out.printf("1: %d\n",score);
+        // System.out.printf("1: %d\n",score);
         // 2. 第二个规则是计算 2*2 的模块，每个3分
         num=0;
         // int data2[][] = new int[data.length][data.length]; // 用来输出测试
@@ -482,31 +487,67 @@ class QrCode{
         }
         //printImage("rule2", data2);
         score += num*3;
-        System.out.printf("2: %d\n",score);
+        // System.out.printf("2: %d\n",score);
 
         // 3. 第三个规则，找到两个特殊模式集合 Data.EvaluationRule3
-        int data2[][] = new int[data.length][data.length]; // 用来输出测试
         int rule3[] = Data.EvaluationRule3;
+        int rule3r[] = Data.EvaluationRule3r;
+
+        // 为了第四步的计算，统计黑白模块数量
+        int r4black=0;
+        
         for(int i=0; i<data.length; i++){
             for(int j=0; j<data.length; j++){
-                // 横条
-                int r3=0, tj=j;
-                for(; r3<rule3.length; r3++){
-                    if(j>=data.length-rule3.length){
-                        break;
+                if(data[i][j]==1){
+                    r4black++;
+                }
+
+                // 检测横向和竖向的匹配
+                int tj=j, ti=i;
+                int r3=0, r3r=0, r3v=0, r3vr=0;
+                for(int r=0; r<rule3.length; r++, tj++, ti++){
+                    // 横条匹配
+                    if(data.length-j >= rule3.length){
+                        if(data[i][tj] == rule3[r]){
+                            r3++;
+                        }
+                        if(data[i][tj] == rule3r[r]){
+                            r3r++;
+                        }
                     }
-                    if(data[i][tj++] != rule3[r3]){
-                        break;
+                    // 竖条匹配
+                    if(data.length-i >= rule3.length){
+                        if(data[ti][j] == rule3[r]){
+                            r3v++;
+                        }
+                        if(data[ti][j] == rule3r[r]){
+                            r3vr++;
+                        }
                     }
                 }
-                System.out.printf("rule3--: %d %d %d\n",i,j,r3);
-                if(r3==rule3.length-1){
-                    score += 30;
-                    System.out.printf("rule3: %d %d %d",i,j,tj);
+
+                if(r3==rule3.length || r3r==rule3.length || r3v==rule3.length || r3vr==rule3.length){
+                    score += 40;
+                    // System.out.printf("rule3: %d %d %d\n",i,j,tj);
                 }
             }
         }
-        return 0;
+
+        // System.out.printf("3: %d\n",score);
+        
+        // 4. 第四个规则，超过一半的黑或白模块
+        int dataTotal = data.length*data.length;
+        int r4_1 = (int)((double)r4black/dataTotal*100);
+        int fivePrev = r4_1-r4_1%5;
+        int fiveNext = fivePrev+5;
+
+        int min = Math.min(Math.abs(fivePrev-50)/5, Math.abs(fiveNext-50)/5);
+        int r4Score = min*10;
+        
+        score += r4Score;
+        // System.out.printf("4: %d\n",score);
+
+        return score;
     }
 
     /**
