@@ -14,15 +14,15 @@
 
 **3月**
 
-- 2020.3.17~3.21 [取色器](https://github.com/onionc/Arava/tree/master/TakeColor) 
+- 2020.3.17~3.21 取色器
 
  ![TakeColor](http://image.acfuu.com/mdImages/Arava/Arava_TakeColor.png)
 
-- 2020.3.23~3.30 [Mp3播放器](https://github.com/onionc/Arava/tree/master/Mp3Player)
+- 2020.3.23~3.30 Mp3播放器
 
  ![Mp3Player](http://image.acfuu.com/mdImages/Arava/Arava_Mp3Player.png)
 
-
+- 2020.4.1~5.12 二维码生成
 
 **To do list**:
 
@@ -30,7 +30,7 @@
 
 - [x] [取色器](https://github.com/onionc/Arava/tree/master/TakeColor)
 - [x] [Mp3播放器](https://github.com/onionc/Arava/tree/master/Mp3Player)
-- qrcode 生成
+- [x] [QrCode 生成](https://github.com/onionc/Arava/tree/master/QrCode)
 - 贪吃蛇（队列）
 - 推箱子复刻版
 - 录制gif
