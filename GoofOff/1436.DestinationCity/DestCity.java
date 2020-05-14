@@ -3,6 +3,11 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * 获取目的地，而且不会有循环的情况
+ * 解题思路：直接拿每个城市的起点和终点，终点的数据中减去和起点重复的数据，剩下那个就是目的地
+ */
+
 // class Solution {
 //     public String destCity(List<List<String>> paths) {
 //         List<String> s1 = new ArrayList<>();
@@ -27,11 +32,6 @@ import java.util.List;
 //         return "";
 //     }
 // }
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
 
 class Solution {
     public String destCity(List<List<String>> paths) {
