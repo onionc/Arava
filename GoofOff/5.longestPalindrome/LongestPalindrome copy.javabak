@@ -1,0 +1,103 @@
+
+
+class Solution {
+    String s;
+    int len;
+
+
+    private boolean compare(int a, int b){
+        return s.charAt(a) == s.charAt(b);
+    }
+    public String longestPalindrome(String s) {
+        this.s = s;
+        this.len = s.length();
+        int width=1;
+
+        if(this.len<=1){
+            return s;
+        }
+
+        int maxLeft=0, maxRight=0;
+        int w=0;
+        for(int left=0; left<this.len-1; left++){
+            
+            if(left+2<this.len){
+
+                w = explode(left, left+2);
+                
+                if(w>0 && (2*w+1)>width){
+                    maxLeft = left-w+1;
+                    maxRight = left+1+w;
+                    // System.out.printf("1[%d,%d], w=%d, [%d,%d] - \n", left, left+2, w, maxLeft, maxRight);
+                    // if(maxRight-maxLeft+1 > width){
+                    //     width = maxRight-maxLeft+1;
+                    // }
+                    width = 2*w+1;
+                }
+                
+
+            }
+
+            w = explode(left, left+1);
+            if(w>0 && (2*w)>width){
+                maxLeft = left-w+1;
+                maxRight = left+w;
+                // System.out.printf("2[%d,%d], w=%d, [%d,%d] - \n", left, left+1, w, maxLeft, maxRight);
+    
+                // if(maxRight-maxLeft+1 > width){
+                //     width = maxRight-maxLeft+1;
+                // }
+                width =  (2*w);
+            }
+            
+            
+        }
+        //System.out.println(s.substring(maxLeft, maxRight+1));
+        return s.substring(maxLeft, maxRight+1);
+    }
+
+    private int explode(int left,int right){
+        int w=0;
+        while(left>=0 && right<len){
+            if(!compare(left, right)) break;
+            else{
+                left--;
+                right++;
+                w++;
+            }
+            
+        }
+        return w;
+    }
+}
+
+class In{
+    String data;
+    String result;
+    public In(String input, String result){
+        this.data = input;
+        this.result = result;
+    }
+}
+
+class LongestPalindromeTest{
+
+    public static void main(String[] args) {
+
+        In inputs[] = {
+            new In("b", "b"),
+            new In("bb", "bb"),
+            new In("bab", "bab"),
+            new In("babad", "bab"),
+            new In("cbbd", "bb"),
+            new In("123456654", "456654"),
+            new In("14565422", "45654"),
+            new In("", ""),
+        };
+        for(In input : inputs){
+            Solution s = new Solution();
+            System.out.printf(input.data + " ");
+            System.out.println(input.result.equals(s.longestPalindrome(input.data)));
+        }
+    }
+}
